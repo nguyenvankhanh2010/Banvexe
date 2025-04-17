@@ -1,1 +1,74 @@
-.vs/
+# ===========================
+# 1️⃣ LOẠI BỎ CÁC FILE BACKEND (SPRING BOOT)
+# ===========================
+
+# Ignore thư mục build
+backend/target/
+backend/.mvn/
+backend/*.jar
+backend/*.war
+
+# Ignore các file cấu hình IDE/hệ thống
+backend/.idea/
+backend/.vscode/
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.DS_Store
+
+# Ignore logs & temp files
+backend/logs/
+backend/*.log
+backend/*.tmp
+
+# Ignore file config cục bộ (tùy chỉnh theo môi trường)
+backend/application.properties
+backend/application.yml
+backend/application-local.properties
+backend/application-local.yml
+
+# ===========================
+# 2️⃣ LOẠI BỎ CÁC FILE FRONTEND (NEXT.JS)
+# ===========================
+
+# Thư mục build
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/.turbo/
+
+# Lock files (chỉ giữ lại package.json)
+frontend/yarn.lock
+frontend/pnpm-lock.yaml
+frontend/package-lock.json
+
+# Ignore env files
+frontend/.env
+frontend/.env.local
+frontend/.env.development
+frontend/.env.production
+frontend/.env*.local
+
+# Ignore logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Ignore TypeScript build info
+frontend/tsconfig.tsbuildinfo
+
+# ===========================
+# 3️⃣ LOẠI BỎ CÁC FILE HỆ THỐNG CHUNG
+# ===========================
+
+# Ignore các file hệ thống của IDE
+.idea/
+.vscode/
+*.iml
+
+# Ignore file hệ thống của MacOS & Windows
+.DS_Store
+Thumbs.db
+
+# Ignore node_modules ở thư mục gốc (nếu có)
+node_modules/
