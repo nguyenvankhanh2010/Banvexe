@@ -119,7 +119,6 @@ export default function CustomersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>SĐT</TableHead>
                   <TableHead>Trạng thái</TableHead>
-                  <TableHead>Ngày đăng ký</TableHead>
                   <TableHead className="text-right">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
@@ -159,7 +158,6 @@ export default function CustomersPage() {
                           {statusMap[customer.status].label}
                         </Badge>
                       </TableCell>
-                      <TableCell>{customer.registeredDate}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
