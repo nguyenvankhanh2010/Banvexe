@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
@@ -14,20 +13,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
 import Image from "next/image"
 import { Eye, EyeOff } from "lucide-react"
+import dynamic from "next/dynamic"
 
-export default function LoginPage() {
+const LoginPage = () => {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("login")
   const [showPassword, setShowPassword] = useState(false)
   const [loginData, setLoginData] = useState({
-    phone: "",
     password: "",
-    name: "", // Added name field
+    name: "",
   })
   const [registerData, setRegisterData] = useState({
     phone: "",
-    name: "", // Added name field
+    name: "",
   })
+  const [errorMessage, setErrorMessage] = useState("")
 
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -39,19 +39,53 @@ export default function LoginPage() {
     setRegisterData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Store user data in localStorage
-    localStorage.setItem("userToken", "demo-token")
-    localStorage.setItem("userName", loginData.name || "Người dùng") // Store user name
-
-    console.log("Login with:", loginData)
-    router.push("/tai-khoan/thong-tin-chung")
-  }
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage("");
+  
+    try {
+      const response = await fetch("http://localhost:8080/dang-nhap", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Accept": "application/json",
+        },
+        credentials: "include",
+        body: new URLSearchParams({
+          name: loginData.name,
+          password: loginData.password,
+        }),
+      });
+  
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Lưu thông tin đăng nhập vào localStorage/session
+        localStorage.setItem("userType", data.userType);
+        localStorage.setItem("userName", data.userName);
+        
+        // Chuyển hướng dựa trên userType
+        switch(data.userType) {
+          case "OWNER":
+            window.location.href = "http://localhost:3001";
+            break;
+          case "STAFF":
+            window.location.href = "http://localhost:3002";
+            break;
+          default:
+            window.location.href = "http://localhost:3000";
+        }
+      } else {
+        setErrorMessage(data.error || "Đăng nhập thất bại");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrorMessage("Không thể kết nối đến server");
+    }
+  };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault()
-    // In a real app, you would validate and send verification code
     console.log("Register with:", registerData)
     router.push("/dang-ky/xac-thuc")
   }
@@ -101,19 +135,6 @@ export default function LoginPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Số điện thoại</Label>
-                        <Input
-                          id="phone"
-                          name="phone"
-                          type="tel"
-                          placeholder="Nhập số điện thoại"
-                          value={loginData.phone}
-                          onChange={handleLoginChange}
-                          required
-                        />
-                      </div>
-
-                      <div className="space-y-2">
                         <Label htmlFor="password">Mật khẩu</Label>
                         <div className="relative">
                           <Input
@@ -140,6 +161,8 @@ export default function LoginPage() {
                           </Button>
                         </div>
                       </div>
+
+                      {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
 
                       <Button type="submit" className="w-full bg-futa-orange hover:bg-futa-orange/90">
                         Đăng nhập
@@ -208,3 +231,5 @@ export default function LoginPage() {
   )
 }
 
+// Vô hiệu hóa SSR cho trang này
+export default dynamic(() => Promise.resolve(LoginPage), { ssr: false })
