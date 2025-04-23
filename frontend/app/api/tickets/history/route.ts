@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
-
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 function parseBackendDateTime(dateTimeStr: string): string {
     try {
@@ -31,55 +30,80 @@ function parseBackendDateTime(dateTimeStr: string): string {
     }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
-        // Hardcoded customer ID 3 for now
-        const customerId = 3;
-        const url = `${backendUrl}/api/bookings/customer/${customerId}`;
+        // Lấy và log tất cả cookies để debug
+        const cookieStore = await cookies();
+        const allCookies = cookieStore.getAll();
+        console.log('All cookies:', allCookies.map(c => `${c.name}=${c.value}`).join('; '));
         
-        console.log('=== Fetching Booking History ===');
-        console.log('Backend URL:', url);
+        // Lấy userId từ cookie
+        const userIdCookie = cookieStore.get('userId');
+        console.log('UserId cookie (từ Next.js cookies()):', userIdCookie);
         
-        // Fetch bookings
-        const response = await fetch(url, {
+        // Lấy userId từ header (nếu được gửi từ client)
+        const userIdFromHeader = request.headers.get('X-User-ID');
+        console.log('UserId from header:', userIdFromHeader);
+        
+        // Lấy userId từ URL query string (nếu có - để test)
+        const url = new URL(request.url);
+        const userIdFromQuery = url.searchParams.get('userId');
+        console.log('UserId from query:', userIdFromQuery);
+        
+        // Ưu tiên theo thứ tự: query > header > cookie > default
+        let userId = userIdFromQuery || userIdFromHeader || userIdCookie?.value || '3';
+        
+        // Nếu userId vẫn là 3 mặc định, thì kiểm tra xem có trong cookie của request không
+        if (userId === '3') {
+            const cookieHeader = request.headers.get('cookie');
+            console.log('Cookie header:', cookieHeader);
+            
+            if (cookieHeader) {
+                const cookies = cookieHeader.split(';').map(c => c.trim());
+                const userIdCookieRaw = cookies.find(c => c.startsWith('userId='));
+                
+                if (userIdCookieRaw) {
+                    const potentialUserId = userIdCookieRaw.split('=')[1];
+                    console.log('UserId found in raw cookie header:', potentialUserId);
+                    if (potentialUserId && potentialUserId !== '3') {
+                        userId = potentialUserId;
+                    }
+                }
+            }
+        }
+        
+        console.log('Using userId for API call:', userId);
+        
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+        const apiUrl = `${backendUrl}/api/bookings/customer/${userId}`;
+        
+        console.log('Fetching booking history from:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
+                'X-User-ID': userId
             },
-            cache: 'no-store' // Disable caching to always get fresh data
+            cache: 'no-store'
         });
-
-        console.log('Response status:', response.status);
         
-        const responseText = await response.text();
-        console.log('Raw response:', responseText);
-        
-        let rawData;
-        try {
-            rawData = JSON.parse(responseText);
-        } catch (e) {
-            console.error('Failed to parse JSON response:', e);
-            throw new Error('Invalid JSON response from backend');
-        }
-
         if (!response.ok) {
-            console.error('Backend error response:', {
-                status: response.status,
-                statusText: response.statusText,
-                data: rawData
-            });
-            throw new Error(
-                rawData?.message || 
-                rawData?.error || 
-                `Backend request failed: ${response.status} ${response.statusText}`
+            console.error('Error fetching booking history. Status:', response.status);
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            
+            return NextResponse.json(
+                { error: 'Không thể lấy lịch sử đặt vé', details: errorText },
+                { status: response.status }
             );
         }
-
-        console.log('Raw backend response:', rawData);
-
+        
+        const data = await response.json();
+        console.log('Booking history fetched successfully, count:', Array.isArray(data) ? data.length : 'N/A');
+        
         // Transform the data to match frontend structure
-        const transformedData = Array.isArray(rawData) ? rawData.map((booking: any) => {
+        const transformedData = Array.isArray(data) ? data.map((booking: any) => {
             console.log('Processing booking:', booking); // Log each booking for debugging
             
             // Parse dates using the helper function
@@ -117,14 +141,9 @@ export async function GET() {
         console.log('Transformed data:', transformedData);
         return NextResponse.json(transformedData);
     } catch (error) {
-        console.error('Error in booking history API:', error);
-        // Return more detailed error information
+        console.error('Error in tickets history API:', error);
         return NextResponse.json(
-            { 
-                error: 'Failed to fetch ticket history',
-                details: error instanceof Error ? error.message : 'Unknown error',
-                timestamp: new Date().toISOString()
-            },
+            { error: 'Lỗi khi lấy lịch sử đặt vé', details: error instanceof Error ? error.message : String(error) },
             { status: 500 }
         );
     }

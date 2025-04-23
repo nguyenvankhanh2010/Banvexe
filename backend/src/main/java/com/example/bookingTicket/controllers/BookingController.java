@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,6 +33,8 @@ import com.example.bookingTicket.services.CustomerService;
 import com.example.bookingTicket.services.SeatService;
 import com.example.bookingTicket.services.TicketService;
 import com.example.bookingTicket.services.TripService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -55,8 +58,24 @@ public class BookingController {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<?> getBookingsByCustomer(@PathVariable Long customerId) {
+    public ResponseEntity<?> getBookingsByCustomer(
+            @PathVariable Long customerId,
+            @RequestHeader(value = "X-User-ID", required = false) String userIdHeader) {
         try {
+            // Nếu có header X-User-ID, ưu tiên sử dụng nó
+            if (userIdHeader != null && !userIdHeader.isEmpty()) {
+                try {
+                    Long headerUserId = Long.parseLong(userIdHeader);
+                    if (!headerUserId.equals(customerId)) {
+                        System.out.println("Overriding URL customerId " + customerId + 
+                                           " with header X-User-ID: " + headerUserId);
+                        customerId = headerUserId;
+                    }
+                } catch (NumberFormatException e) {
+                    System.err.println("Invalid X-User-ID header: " + userIdHeader);
+                }
+            }
+            
             System.out.println("Fetching bookings for customer ID: " + customerId);
             
             // Validate customer exists
@@ -95,9 +114,41 @@ public class BookingController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createBooking(@RequestBody BookingRequest request) {
+    public ResponseEntity<?> createBooking(
+            @RequestBody BookingRequest request, 
+            HttpServletRequest servletRequest,
+            @RequestHeader(value = "X-User-ID", required = false) String userIdHeader) {
         try {
             System.out.println("Received booking request: " + request);
+            
+            // Lấy userId từ session
+            HttpSession session = servletRequest.getSession(false);
+            Long customerId = 3L; // Mặc định là 3 nếu không có session
+            
+            // Thử lấy userId từ session
+            if (session != null && session.getAttribute("userId") != null) {
+                try {
+                    customerId = Long.parseLong(session.getAttribute("userId").toString());
+                    System.out.println("Using customerId from session: " + customerId);
+                } catch (NumberFormatException e) {
+                    System.err.println("Error parsing customerId from session: " + e.getMessage());
+                }
+            } else {
+                System.out.println("No session found or userId not in session, checking header");
+                
+                // Nếu không có session, thử lấy từ header
+                if (userIdHeader != null && !userIdHeader.isEmpty()) {
+                    try {
+                        customerId = Long.parseLong(userIdHeader);
+                        System.out.println("Using customerId from header: " + customerId);
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing customerId from header: " + e.getMessage());
+                        System.out.println("Using default customerId: " + customerId);
+                    }
+                } else {
+                    System.out.println("No userId header found, using default customerId: " + customerId);
+                }
+            }
 
             // Validate request
             if (request.getSeatId() == null || request.getTripId() == null) {
@@ -124,11 +175,11 @@ public class BookingController {
                     .body(new ErrorResponse("Not Found", "Không tìm thấy chuyến xe với ID: " + request.getTripId()));
             }
 
-            // Get customer (default to ID 3)
-            Customer customer = customerService.findById(3L);
+            // Get customer
+            Customer customer = customerService.findById(customerId);
             if (customer == null) {
                 return ResponseEntity.badRequest()
-                    .body(new ErrorResponse("Not Found", "Không tìm thấy thông tin khách hàng"));
+                    .body(new ErrorResponse("Not Found", "Không tìm thấy thông tin khách hàng với ID: " + customerId));
             }
             
             // Update seat status first
@@ -187,9 +238,32 @@ public class BookingController {
      * Cancel a booking and its related ticket and seat
      */
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
+    public ResponseEntity<?> cancelBooking(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-ID", required = false) String userIdHeader,
+            HttpServletRequest servletRequest) {
         try {
             System.out.println("Cancelling booking with ID: " + id);
+            
+            // Lấy userId từ session hoặc header
+            HttpSession session = servletRequest.getSession(false);
+            Long userId = null;
+            
+            if (session != null && session.getAttribute("userId") != null) {
+                try {
+                    userId = Long.parseLong(session.getAttribute("userId").toString());
+                    System.out.println("Using userId from session: " + userId);
+                } catch (NumberFormatException e) {
+                    System.err.println("Error parsing userId from session: " + e.getMessage());
+                }
+            } else if (userIdHeader != null && !userIdHeader.isEmpty()) {
+                try {
+                    userId = Long.parseLong(userIdHeader);
+                    System.out.println("Using userId from header: " + userId);
+                } catch (NumberFormatException e) {
+                    System.err.println("Error parsing userId from header: " + e.getMessage());
+                }
+            }
             
             // Find booking history
             BookingHistory bookingHistory = bookingHistoryService.findById(id);
@@ -197,6 +271,14 @@ public class BookingController {
                 System.err.println("Booking not found with ID: " + id);
                 return ResponseEntity.badRequest()
                     .body(new ErrorResponse("Not Found", "Không tìm thấy đặt vé với ID: " + id));
+            }
+            
+            // Kiểm tra xem booking có thuộc về user không
+            if (userId != null && !bookingHistory.getCustomer().getId().equals(userId)) {
+                System.err.println("User " + userId + " attempted to cancel booking " + id + 
+                                   " owned by user " + bookingHistory.getCustomer().getId());
+                return ResponseEntity.status(403)
+                    .body(new ErrorResponse("Forbidden", "Bạn không có quyền hủy vé này"));
             }
             
             // Update booking status to CANCELED

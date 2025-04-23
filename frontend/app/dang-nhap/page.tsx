@@ -14,6 +14,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Eye, EyeOff } from "lucide-react"
 import dynamic from "next/dynamic"
+import { login } from "@/lib/auth"
 
 const LoginPage = () => {
   const router = useRouter()
@@ -28,6 +29,7 @@ const LoginPage = () => {
     name: "",
   })
   const [errorMessage, setErrorMessage] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -42,45 +44,32 @@ const LoginPage = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
+    setIsLoading(true);
   
     try {
-      const response = await fetch("http://localhost:8080/dang-nhap", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "Accept": "application/json",
-        },
-        credentials: "include",
-        body: new URLSearchParams({
-          name: loginData.name,
-          password: loginData.password,
-        }),
-      });
-  
-      const data = await response.json();
+      const result = await login(loginData.name, loginData.password);
       
-      if (response.ok) {
-        // Lưu thông tin đăng nhập vào localStorage/session
-        localStorage.setItem("userType", data.userType);
-        localStorage.setItem("userName", data.userName);
-        
-        // Chuyển hướng dựa trên userType
-        switch(data.userType) {
-          case "OWNER":
-            window.location.href = "http://localhost:3001";
-            break;
-          case "STAFF":
-            window.location.href = "http://localhost:3002";
-            break;
-          default:
-            window.location.href = "http://localhost:3000";
-        }
+      if (result.success) {
+        setTimeout(() => {
+          switch(result.userType) {
+            case "OWNER":
+              window.location.href = "http://localhost:3001";
+              break;
+            case "STAFF":
+              window.location.href = "http://localhost:3002";
+              break;
+            default:
+              router.push("/");
+          }
+        }, 300);
       } else {
-        setErrorMessage(data.error || "Đăng nhập thất bại");
+        setErrorMessage(result.message);
       }
     } catch (error) {
       console.error("Login error:", error);
       setErrorMessage("Không thể kết nối đến server");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -164,8 +153,12 @@ const LoginPage = () => {
 
                       {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
 
-                      <Button type="submit" className="w-full bg-futa-orange hover:bg-futa-orange/90">
-                        Đăng nhập
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-futa-orange hover:bg-futa-orange/90"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
                       </Button>
 
                       <div className="text-center">

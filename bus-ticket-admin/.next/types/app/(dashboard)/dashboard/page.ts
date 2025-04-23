@@ -1,4 +1,4 @@
-// File: D:\HK2\New folder\BookingTicketWebsite\bus-ticket-admin\app\(dashboard)\dashboard\page.tsx
+// File: C:\Users\ADMIN\Downloads\BookingTicketWebsite\bus-ticket-admin\app\(dashboard)\dashboard\page.tsx
 import * as entry from '../../../../../app/(dashboard)/dashboard/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
