@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Eye, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,58 +17,67 @@ type Ticket = {
   route: string
   datetime: string
   seats: string
-  paymentStatus: "paid" | "pending" | "failed"
-  ticketStatus: "confirmed" | "pending" | "canceled"
+  paymentStatus: string
+  ticketStatus: string
 }
 
-const mockTickets: Ticket[] = Array.from({ length: 10 }).map((_, i) => ({
-  id: `BT${10000 + i}`,
-  customerName: `Nguyễn Văn ${String.fromCharCode(65 + i)}`,
-  phone: `098765432${i}`,
-  route: i % 2 === 0 ? "Hà Nội - Hồ Chí Minh" : "Đà Nẵng - Hà Nội",
-  datetime: `${(i % 12) + 1}:00 ${20 + i}/04/2025`,
-  seats: `A${i + 1}, B${i + 1}`,
-  paymentStatus: i % 3 === 0 ? "paid" : i % 3 === 1 ? "pending" : "failed",
-  ticketStatus: i % 3 === 0 ? "confirmed" : i % 3 === 1 ? "pending" : "canceled",
-}))
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning"
 
-const paymentStatusMap = {
+const paymentStatusMap: Record<string, { label: string; variant: BadgeVariant }> = {
   paid: { label: "Đã thanh toán", variant: "success" },
   pending: { label: "Đang chờ", variant: "warning" },
   failed: { label: "Thất bại", variant: "destructive" },
+  SUCCEEDED: { label: "Thành công", variant: "success" },
+  WAITING_CASH: { label: "Chờ tiền mặt", variant: "warning" },
+  WAITING_TRANSFER: { label: "Chờ chuyển khoản", variant: "warning" },
 }
 
-const ticketStatusMap = {
+const ticketStatusMap: Record<string, { label: string; variant: BadgeVariant }> = {
   confirmed: { label: "Đã xác nhận", variant: "success" },
   pending: { label: "Đang chờ", variant: "warning" },
   canceled: { label: "Đã hủy", variant: "destructive" },
 }
 
 export default function TicketsPage() {
+  const [tickets, setTickets] = useState<Ticket[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [paymentFilter, setPaymentFilter] = useState("all")
   const [ticketFilter, setTicketFilter] = useState("all")
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
 
-  const filteredTickets = mockTickets.filter((ticket) => {
-    // Search filter
+  useEffect(() => {
+    fetch("http://localhost:8080/api/staff/tickets")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!Array.isArray(data)) {
+          console.error("API response is not an array:", data)
+          return
+        }
+
+        const mapped: Ticket[] = data.map((item: any) => ({
+          id: item.bookingCode,
+          customerName: item.customerName,
+          phone: item.phone,
+          route: item.route,
+          datetime: new Date(item.arrivalTime).toLocaleString("vi-VN"),
+          seats: item.seatNumber,
+          paymentStatus: item.paymentStatus,
+          ticketStatus: item.ticketStatus,
+        }))
+        setTickets(mapped)
+      })
+      .catch((err) => console.error("Error fetching tickets:", err))
+  }, [])
+
+  const filteredTickets = tickets.filter((ticket) => {
     if (
       searchQuery &&
       !ticket.id.toLowerCase().includes(searchQuery.toLowerCase()) &&
       !ticket.customerName.toLowerCase().includes(searchQuery.toLowerCase())
-    ) {
-      return false
-    }
+    ) return false
 
-    // Payment status filter
-    if (paymentFilter !== "all" && ticket.paymentStatus !== paymentFilter) {
-      return false
-    }
-
-    // Ticket status filter
-    if (ticketFilter !== "all" && ticket.ticketStatus !== ticketFilter) {
-      return false
-    }
+    if (paymentFilter !== "all" && ticket.paymentStatus !== paymentFilter) return false
+    if (ticketFilter !== "all" && ticket.ticketStatus !== ticketFilter) return false
 
     return true
   })
@@ -154,31 +163,19 @@ export default function TicketsPage() {
                       <TableCell>
                         <Badge
                           variant={
-                            paymentStatusMap[ticket.paymentStatus].variant as
-                              | "default"
-                              | "secondary"
-                              | "destructive"
-                              | "outline"
-                              | "success"
-                              | "warning"
+                            paymentStatusMap[ticket.paymentStatus]?.variant ?? "secondary"
                           }
                         >
-                          {paymentStatusMap[ticket.paymentStatus].label}
+                          {paymentStatusMap[ticket.paymentStatus]?.label ?? ticket.paymentStatus}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            ticketStatusMap[ticket.ticketStatus].variant as
-                              | "default"
-                              | "secondary"
-                              | "destructive"
-                              | "outline"
-                              | "success"
-                              | "warning"
+                            ticketStatusMap[ticket.ticketStatus]?.variant ?? "secondary"
                           }
                         >
-                          {ticketStatusMap[ticket.ticketStatus].label}
+                          {ticketStatusMap[ticket.ticketStatus]?.label ?? ticket.ticketStatus}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -202,7 +199,7 @@ export default function TicketsPage() {
 
           <div className="mt-4 flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              Hiển thị {filteredTickets.length} / {mockTickets.length} vé
+              Hiển thị {filteredTickets.length} / {tickets.length} vé
             </div>
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="icon">
@@ -246,49 +243,22 @@ export default function TicketsPage() {
                     <p className="text-sm text-muted-foreground">Thanh toán:</p>
                     <Badge
                       variant={
-                        paymentStatusMap[selectedTicket.paymentStatus].variant as
-                          | "default"
-                          | "secondary"
-                          | "destructive"
-                          | "outline"
-                          | "success"
-                          | "warning"
+                        paymentStatusMap[selectedTicket.paymentStatus]?.variant ?? "secondary"
                       }
                     >
-                      {paymentStatusMap[selectedTicket.paymentStatus].label}
+                      {paymentStatusMap[selectedTicket.paymentStatus]?.label ?? selectedTicket.paymentStatus}
                     </Badge>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Vé:</p>
                     <Badge
                       variant={
-                        ticketStatusMap[selectedTicket.ticketStatus].variant as
-                          | "default"
-                          | "secondary"
-                          | "destructive"
-                          | "outline"
-                          | "success"
-                          | "warning"
+                        ticketStatusMap[selectedTicket.ticketStatus]?.variant ?? "secondary"
                       }
                     >
-                      {ticketStatusMap[selectedTicket.ticketStatus].label}
+                      {ticketStatusMap[selectedTicket.ticketStatus]?.label ?? selectedTicket.ticketStatus}
                     </Badge>
                   </div>
-                </div>
-              </div>
-
-              <div className="mt-2">
-                <h3 className="mb-2 font-medium">Lịch sử trạng thái</h3>
-                <div className="space-y-2 rounded-md border p-2">
-                  <p className="text-xs">
-                    <span className="font-medium">20/04/2025 10:30</span> - Đặt vé thành công
-                  </p>
-                  <p className="text-xs">
-                    <span className="font-medium">20/04/2025 10:35</span> - Thanh toán thành công
-                  </p>
-                  <p className="text-xs">
-                    <span className="font-medium">20/04/2025 11:00</span> - Xác nhận vé
-                  </p>
                 </div>
               </div>
 

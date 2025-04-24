@@ -7,6 +7,8 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.bookingTicket.dto.TicketInfoDTO;
+import com.example.bookingTicket.dto.TicketInfoProjection;
 import com.example.bookingTicket.enums.EPaymentMethod;
 import com.example.bookingTicket.enums.EPaymentStatus;
 import com.example.bookingTicket.enums.ESeatStatus;
@@ -177,4 +179,14 @@ public class TicketService {
         if (seat == null) return null;
         return ticketRepository.findBySeat(seat);
     }
+
+    //Get Ticket List available for Staff
+    public List<TicketInfoProjection> getTicketList() {
+    List<TicketInfoProjection> tickets = ticketRepository.getAllTicketInfo();
+    System.out.println(">>> Số lượng vé lấy được: " + tickets.size());
+    return tickets;
+}
+
+    //Get Canceled Ticket List for Staff
+
 }

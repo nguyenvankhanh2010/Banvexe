@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bookingTicket.dto.BookingRequest;
 import com.example.bookingTicket.dto.PaymentRequest;
+import com.example.bookingTicket.dto.TicketInfoDTO;
+import com.example.bookingTicket.dto.TicketInfoProjection;
 import com.example.bookingTicket.enums.EPaymentMethod;
 import com.example.bookingTicket.enums.EPaymentStatus;
 import com.example.bookingTicket.models.Payment;
@@ -75,4 +78,12 @@ public class TicketController {
             return ResponseEntity.badRequest().body(new ErrorResponse("Error", "Payment failed: " + e.getMessage()));
         }
     }
+
+    //GET /api/staff-list-tickets
+    @GetMapping("/staff/tickets")
+@CrossOrigin(origins = "http://localhost:3002") // hoặc 3002 nếu frontend bạn chạy ở đó
+public ResponseEntity<List<TicketInfoProjection>> getAllTickets() {
+    return ResponseEntity.ok(ticketService.getTicketList());
+}
+
 }
