@@ -14,8 +14,8 @@ public class TicketInfoDTO {
 
     // Constructor
     public TicketInfoDTO(String bookingCode, String customerName, String phone,
-                         String route, LocalDateTime arrivalTime, String seatNumber,
-                         String ticketStatus, String paymentStatus) {
+            String route, LocalDateTime arrivalTime, String seatNumber,
+            String ticketStatus, String paymentStatus) {
         this.bookingCode = bookingCode;
         this.customerName = customerName;
         this.phone = phone;

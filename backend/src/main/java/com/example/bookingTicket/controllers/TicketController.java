@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,8 +46,7 @@ public class TicketController {
             Ticket ticket = ticketService.bookTicket(
                     request.getSeatId(),
                     request.getCustomerId(),
-                    request.getCost()
-            );
+                    request.getCost());
             return ResponseEntity.ok(new SuccessResponse("Success", ticket));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse("Error", "Seat is not available"));
@@ -56,7 +56,7 @@ public class TicketController {
     // GET /api/payment-details: Chuẩn bị thông tin thanh toán
     @GetMapping("/payment-details")
     public ResponseEntity<Payment> getPaymentDetails(@RequestParam Long ticketId,
-                                                     @RequestParam String paymentMethod) {
+            @RequestParam String paymentMethod) {
         Ticket ticket = ticketService.ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
         EPaymentMethod method = EPaymentMethod.valueOf(paymentMethod.toUpperCase());
@@ -79,17 +79,22 @@ public class TicketController {
         }
     }
 
-    //GET /api/staff-list-tickets
+    // GET /api/staff-list-tickets
     @GetMapping("/staff/tickets")
-@CrossOrigin(origins = "http://localhost:3002") // hoặc 3002 nếu frontend bạn chạy ở đó
-public ResponseEntity<List<TicketInfoProjection>> getAllTickets() {
-    return ResponseEntity.ok(ticketService.getTicketList());
-}
+    @CrossOrigin(origins = "http://localhost:3002") // hoặc 3002 nếu frontend bạn chạy ở đó
+    public ResponseEntity<List<TicketInfoProjection>> getAllTickets() {
+        return ResponseEntity.ok(ticketService.getTicketList());
+    }
 
-@GetMapping("/staff/tickets/search")
-@CrossOrigin(origins = "http://localhost:3002")
-public ResponseEntity<List<TicketInfoProjection>> searchTickets(@RequestParam String q) {
-    return ResponseEntity.ok(ticketService.searchTickets(q));
-}
+    @GetMapping("/staff/tickets/search")
+    @CrossOrigin(origins = "http://localhost:3002")
+    public ResponseEntity<List<TicketInfoProjection>> searchTickets(@RequestParam String q) {
+        return ResponseEntity.ok(ticketService.searchTickets(q));
+    }
+
+    @GetMapping("/staff/tickets/{code}")
+    public ResponseEntity<TicketInfoProjection> getTicketDetail(@PathVariable String code) {
+        return ResponseEntity.ok(ticketService.getTicketDetail(code));
+    }
 
 }

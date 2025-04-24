@@ -61,11 +61,11 @@ public class TicketService {
         // Lấy thông tin ghế và kiểm tra lại một lần nữa để đảm bảo
         Seat seat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new RuntimeException("Seat not found"));
-                
+
         if (seat.getStatus() != ESeatStatus.AVAILABLE) {
             throw new RuntimeException("Seat is not available");
         }
-        
+
         Customer customer = customerService.findById(Long.parseLong(customerId));
 
         Ticket ticket = new Ticket();
@@ -95,9 +95,10 @@ public class TicketService {
 
         // Create payment
         Payment payment = new Payment();
-        payment.setAmount(Long.valueOf((long)ticket.getCost()));
+        payment.setAmount(Long.valueOf((long) ticket.getCost()));
         payment.setPaymentTime(LocalDateTime.now());
-        payment.setStatus(paymentMethod == EPaymentMethod.BY_CASH ? EPaymentStatus.WAITING_CASH : EPaymentStatus.WAITING_TRANSFER);
+        payment.setStatus(paymentMethod == EPaymentMethod.BY_CASH ? EPaymentStatus.WAITING_CASH
+                : EPaymentStatus.WAITING_TRANSFER);
         payment.setMethod(paymentMethod);
         payment.setBookingHistory(savedHistory);
         return paymentRepository.save(payment);
@@ -112,35 +113,35 @@ public class TicketService {
         if (payment.getMethod() == EPaymentMethod.BY_CASH) {
             // Thanh toán tiền mặt: chuyển sang trạng thái chờ
             payment.setStatus(EPaymentStatus.WAITING_CASH);
-            
+
             // Cập nhật trạng thái ticket và booking history sang CONFIRMED
             BookingHistory bookingHistory = payment.getBookingHistory();
             bookingHistory.setStatus(ETicketStatus.CONFIRMED);
             bookingHistoryService.save(bookingHistory);
-            
+
             // Cập nhật ticket status
             Ticket ticket = ticketRepository.findBySeat(bookingHistory.getSeat());
             if (ticket != null) {
                 ticket.setStatus(ETicketStatus.CONFIRMED);
                 ticketRepository.save(ticket);
             }
-            
+
         } else {
             // Chuyển khoản: chuyển sang trạng thái thành công và cập nhật ghế
             payment.setStatus(EPaymentStatus.SUCCEEDED);
-            
+
             // Cập nhật trạng thái ticket và booking history sang CONFIRMED
             BookingHistory bookingHistory = payment.getBookingHistory();
             bookingHistory.setStatus(ETicketStatus.CONFIRMED);
             bookingHistoryService.save(bookingHistory);
-            
+
             // Cập nhật ticket status
             Ticket ticket = ticketRepository.findBySeat(bookingHistory.getSeat());
             if (ticket != null) {
                 ticket.setStatus(ETicketStatus.CONFIRMED);
                 ticketRepository.save(ticket);
             }
-            
+
             // Chỉ cập nhật trạng thái ghế khi thanh toán chuyển khoản thành công
             Seat seat = bookingHistory.getSeat();
             seat.setStatus(ESeatStatus.BOOKED);
@@ -154,18 +155,18 @@ public class TicketService {
     public void cancelTicket(Long ticketId) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
-        
+
         // Cập nhật trạng thái ticket
         ticket.setStatus(ETicketStatus.CANCELED);
         ticketRepository.save(ticket);
-        
+
         // Cập nhật booking history
         BookingHistory bookingHistory = bookingHistoryService.findByTicket(ticket);
         if (bookingHistory != null) {
             bookingHistory.setStatus(ETicketStatus.CANCELED);
             bookingHistoryService.save(bookingHistory);
         }
-        
+
         // Cập nhật trạng thái ghế về AVAILABLE
         Seat seat = ticket.getSeat();
         seat.setStatus(ESeatStatus.AVAILABLE);
@@ -176,21 +177,28 @@ public class TicketService {
      * Find a ticket by seat
      */
     public Ticket findBySeat(Seat seat) {
-        if (seat == null) return null;
+        if (seat == null)
+            return null;
         return ticketRepository.findBySeat(seat);
     }
 
-    //Get Ticket List available for Staff
+    // Get Ticket List available for Staff
     public List<TicketInfoProjection> getTicketList() {
-    List<TicketInfoProjection> tickets = ticketRepository.getAllTicketInfo();
-    System.out.println(">>> Số lượng vé lấy được: " + tickets.size());
-    return tickets;
-}
+        List<TicketInfoProjection> tickets = ticketRepository.getAllTicketInfo();
+        System.out.println(">>> Số lượng vé lấy được: " + tickets.size());
+        return tickets;
+    }
 
-public List<TicketInfoProjection> searchTickets(String keyword) {
-    return ticketRepository.searchTickets(keyword);
-}
+    public List<TicketInfoProjection> searchTickets(String keyword) {
+        return ticketRepository.searchTickets(keyword);
+    }
 
-    //Get Canceled Ticket List for Staff
+    // Service
+    public TicketInfoProjection getTicketDetail(String bookingCode) {
+        return ticketRepository.getTicketDetailByBookingCode(bookingCode)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy vé"));
+    }
+
+    // Get Canceled Ticket List for Staff
 
 }

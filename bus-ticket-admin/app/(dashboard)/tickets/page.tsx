@@ -81,6 +81,23 @@ export default function TicketsPage() {
     return true
   })
 
+  const handleViewDetail = (ticketId: string) => {
+    fetch(`http://localhost:8080/api/staff/tickets/${ticketId}`)
+      .then(res => res.json())
+      .then(data => {
+        setSelectedTicket({
+          id: data.bookingCode,
+          customerName: data.customerName,
+          phone: data.phone,
+          route: data.route,
+          datetime: new Date(data.arrivalTime).toLocaleString("vi-VN"),
+          seats: data.seatNumber,
+          paymentStatus: data.paymentStatus,
+          ticketStatus: data.ticketStatus,
+        })
+      })
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -100,7 +117,6 @@ export default function TicketsPage() {
                 className="w-full md:w-[300px]"
               />
             </div>
-            {/* Các filter giữ nguyên nếu có */}
           </div>
 
           <div className="mt-6 overflow-x-auto rounded-md border">
@@ -129,25 +145,17 @@ export default function TicketsPage() {
                       <TableCell>{ticket.datetime}</TableCell>
                       <TableCell>{ticket.seats}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            paymentStatusMap[ticket.paymentStatus]?.variant ?? "secondary"
-                          }
-                        >
+                        <Badge variant={paymentStatusMap[ticket.paymentStatus]?.variant ?? "secondary"}>
                           {paymentStatusMap[ticket.paymentStatus]?.label ?? ticket.paymentStatus}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            ticketStatusMap[ticket.ticketStatus]?.variant ?? "secondary"
-                          }
-                        >
+                        <Badge variant={ticketStatusMap[ticket.ticketStatus]?.variant ?? "secondary"}>
                           {ticketStatusMap[ticket.ticketStatus]?.label ?? ticket.ticketStatus}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => setSelectedTicket(ticket)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleViewDetail(ticket.id)}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">Xem chi tiết</span>
                         </Button>
@@ -164,11 +172,57 @@ export default function TicketsPage() {
               </TableBody>
             </Table>
           </div>
+
           <div className="mt-4 text-sm text-muted-foreground">
-  Tổng số vé hiển thị: {filteredTickets.length} / {tickets.length}
-</div>
-</CardContent>
+            Tổng số vé hiển thị: {filteredTickets.length} / {tickets.length}
+          </div>
+        </CardContent>
       </Card>
+
+      <Dialog open={!!selectedTicket} onOpenChange={(open) => !open && setSelectedTicket(null)}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Chi tiết vé #{selectedTicket?.id}</DialogTitle>
+            <DialogDescription>Thông tin chi tiết về vé và hành khách</DialogDescription>
+          </DialogHeader>
+
+          {selectedTicket && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="mb-2 font-medium">Thông tin hành khách</h3>
+                  <p className="text-sm">Tên: {selectedTicket.customerName}</p>
+                  <p className="text-sm">SĐT: {selectedTicket.phone}</p>
+                </div>
+                <div>
+                  <h3 className="mb-2 font-medium">Thông tin vé</h3>
+                  <p className="text-sm">Tuyến: {selectedTicket.route}</p>
+                  <p className="text-sm">Thời gian: {selectedTicket.datetime}</p>
+                  <p className="text-sm">Số ghế: {selectedTicket.seats}</p>
+                </div>
+              </div>
+
+              <div className="mt-2">
+                <h3 className="mb-2 font-medium">Trạng thái</h3>
+                <div className="flex space-x-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Thanh toán:</p>
+                    <Badge variant={paymentStatusMap[selectedTicket.paymentStatus]?.variant ?? "secondary"}>
+                      {paymentStatusMap[selectedTicket.paymentStatus]?.label ?? selectedTicket.paymentStatus}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Vé:</p>
+                    <Badge variant={ticketStatusMap[selectedTicket.ticketStatus]?.variant ?? "secondary"}>
+                      {ticketStatusMap[selectedTicket.ticketStatus]?.label ?? selectedTicket.ticketStatus}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
