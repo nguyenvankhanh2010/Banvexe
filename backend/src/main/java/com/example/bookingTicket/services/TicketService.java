@@ -187,6 +187,10 @@ public class TicketService {
     return tickets;
 }
 
+public List<TicketInfoProjection> searchTickets(String keyword) {
+    return ticketRepository.searchTickets(keyword);
+}
+
     //Get Canceled Ticket List for Staff
 
 }

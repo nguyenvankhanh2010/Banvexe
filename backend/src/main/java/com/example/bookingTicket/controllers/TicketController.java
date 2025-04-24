@@ -86,4 +86,10 @@ public ResponseEntity<List<TicketInfoProjection>> getAllTickets() {
     return ResponseEntity.ok(ticketService.getTicketList());
 }
 
+@GetMapping("/staff/tickets/search")
+@CrossOrigin(origins = "http://localhost:3002")
+public ResponseEntity<List<TicketInfoProjection>> searchTickets(@RequestParam String q) {
+    return ResponseEntity.ok(ticketService.searchTickets(q));
+}
+
 }
