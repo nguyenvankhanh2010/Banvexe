@@ -36,6 +36,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
                 JOIN users u ON u.id = t.customer_id
                 JOIN booking_histories h ON h.seat_id = s.id AND h.trip_id = tr.id
                 JOIN payments p ON p.booking_history_id = h.id
+                WHERE t.status NOT IN ('CANCELED');
             """, nativeQuery = true)
     List<TicketInfoProjection> getAllTicketInfo();
 
@@ -57,13 +58,14 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
                 JOIN booking_histories h ON h.seat_id = s.id AND h.trip_id = tr.id
                 JOIN payments p ON p.booking_history_id = h.id
                 WHERE
+                t.status NOT IN ('CANCELED') AND (
                     t.booking_code LIKE CONCAT('%', :keyword, '%')
                   OR u.name LIKE CONCAT('%', :keyword, '%')
                   OR u.phone LIKE CONCAT('%', :keyword, '%')
                   OR tr.origin LIKE CONCAT('%', :keyword, '%')
                   OR tr.destination LIKE CONCAT('%', :keyword, '%')
                   OR t.status LIKE CONCAT('%', :keyword, '%')
-                  OR p.status LIKE CONCAT('%', :keyword, '%')
+                  OR p.status LIKE CONCAT('%', :keyword, '%'))
             """, nativeQuery = true)
     List<TicketInfoProjection> searchTickets(@Param("keyword") String keyword);
 
