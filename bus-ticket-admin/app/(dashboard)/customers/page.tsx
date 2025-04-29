@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Eye, Search, Filter, Lock, Unlock, MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,22 +18,12 @@ type Customer = {
   name: string
   email: string
   phone: string
+  gender: "male" | "female" | "other"
   status: "active" | "inactive" | "blocked"
   registeredDate: string
   lastActivity: string
   totalBookings: number
 }
-
-const mockCustomers: Customer[] = Array.from({ length: 10 }).map((_, i) => ({
-  id: `CUS${10000 + i}`,
-  name: `Nguyễn Văn ${String.fromCharCode(65 + i)}`,
-  email: `customer${i}@example.com`,
-  phone: `098765432${i}`,
-  status: i % 5 === 0 ? "blocked" : i % 3 === 0 ? "inactive" : "active",
-  registeredDate: `${10 + i}/01/2025`,
-  lastActivity: `${15 + i}/04/2025`,
-  totalBookings: i * 3 + 2,
-}))
 
 const statusMap = {
   active: { label: "Hoạt động", variant: "success" },
@@ -42,39 +32,65 @@ const statusMap = {
 }
 
 export default function CustomersPage() {
+  const [customers, setCustomers] = useState<Customer[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
-  const filteredCustomers = mockCustomers.filter((customer) => {
-    // Search filter
-    if (
-      searchQuery &&
-      !customer.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !customer.email.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !customer.phone.includes(searchQuery)
-    ) {
-      return false
+  const fetchCustomers = () => {
+    let url = "http://localhost:8080/api/staff/customers"
+
+    if (searchQuery.trim()) {
+      url = `http://localhost:8080/api/staff/customers/search?keyword=${encodeURIComponent(searchQuery)}`
+    } else if (statusFilter !== "all") {
+      url = `http://localhost:8080/api/staff/customers/search?keyword=${encodeURIComponent(statusFilter)}`
     }
 
-    // Status filter
-    if (statusFilter !== "all" && customer.status !== statusFilter) {
-      return false
-    }
-
-    return true
-  })
-
-  const handleToggleStatus = (customer: Customer) => {
-    const newStatus = customer.status === "blocked" ? "active" : "blocked"
-    const action = newStatus === "blocked" ? "khóa" : "mở khóa"
-
-    toast({
-      title: `Tài khoản đã được ${action}`,
-      description: `Tài khoản của ${customer.name} đã được ${action} thành công.`,
-    })
+    fetch(url)
+      .then(res => res.json())
+      .then((data) => {
+        const mapped: Customer[] = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          email: item.email,
+          phone: item.phone,
+          gender: item.gender?.toLowerCase() || "other",
+          status: item.status?.toLowerCase() || "inactive",
+          registeredDate: "-",
+          lastActivity: "-",
+          totalBookings: 0
+        }))
+        setCustomers(mapped)
+      })
+      .catch((err) => console.error("Error fetching customers:", err))
   }
 
+  useEffect(() => {
+    fetchCustomers()
+  }, [searchQuery, statusFilter])
+
+  const handleToggleStatus = (customer: Customer) => {
+    fetch(`http://localhost:8080/api/staff/customers/${customer.id}/toggle-status`, {
+      method: "PUT",
+    })
+      .then((res) => {
+        if (res.ok) {
+          toast({
+            title: "Cập nhật thành công",
+            description: `Tài khoản ${customer.name} đã được thay đổi trạng thái.`,
+          })
+          fetchCustomers()
+        } else {
+          throw new Error("Cập nhật thất bại")
+        }
+      })
+      .catch(() =>
+        toast({
+          title: "Lỗi",
+          description: "Không thể cập nhật trạng thái tài khoản",
+        })
+      )
+  }
   return (
     <div className="space-y-6">
       <div>
@@ -118,21 +134,19 @@ export default function CustomersPage() {
                   <TableHead>Khách hàng</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>SĐT</TableHead>
+                  <TableHead>Giới tính</TableHead>
                   <TableHead>Trạng thái</TableHead>
                   <TableHead className="text-right">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCustomers.length > 0 ? (
-                  filteredCustomers.map((customer) => (
+                {customers.length > 0 ? (
+                  customers.map((customer) => (
                     <TableRow key={customer.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar>
-                            <AvatarImage
-                              src={`/placeholder.svg?height=32&width=32&text=${customer.name.charAt(0)}`}
-                              alt={customer.name}
-                            />
+                            <AvatarImage src={`/placeholder.svg?height=32&width=32&text=${customer.name.charAt(0)}`} alt={customer.name} />
                             <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div>
@@ -143,21 +157,13 @@ export default function CustomersPage() {
                       </TableCell>
                       <TableCell>{customer.email}</TableCell>
                       <TableCell>{customer.phone}</TableCell>
+                      <TableCell>{customer.gender === "male" ? "Nam" : customer.gender === "female" ? "Nữ" : "Khác"}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            statusMap[customer.status].variant as
-                              | "default"
-                              | "secondary"
-                              | "destructive"
-                              | "outline"
-                              | "success"
-                              | "warning"
-                          }
-                        >
-                          {statusMap[customer.status].label}
+                        <Badge variant={(statusMap[customer.status]?.variant ?? "secondary") as "success" | "warning" | "destructive" | "default" | "secondary" | "outline"}>
+                          {statusMap[customer.status]?.label ?? customer.status}
                         </Badge>
                       </TableCell>
+
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -213,27 +219,13 @@ export default function CustomersPage() {
             <div className="grid gap-4 py-4">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage
-                    src={`/placeholder.svg?height=64&width=64&text=${selectedCustomer.name.charAt(0)}`}
-                    alt={selectedCustomer.name}
-                  />
+                  <AvatarImage src={`/placeholder.svg?height=64&width=64&text=${selectedCustomer.name.charAt(0)}`} alt={selectedCustomer.name} />
                   <AvatarFallback>{selectedCustomer.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className="text-lg font-medium">{selectedCustomer.name}</h3>
                   <p className="text-sm text-muted-foreground">{selectedCustomer.id}</p>
-                  <Badge
-                    variant={
-                      statusMap[selectedCustomer.status].variant as
-                        | "default"
-                        | "secondary"
-                        | "destructive"
-                        | "outline"
-                        | "success"
-                        | "warning"
-                    }
-                    className="mt-1"
-                  >
+                  <Badge variant={statusMap[selectedCustomer.status].variant as any} className="mt-1">
                     {statusMap[selectedCustomer.status].label}
                   </Badge>
                 </div>
@@ -244,6 +236,7 @@ export default function CustomersPage() {
                   <h3 className="mb-2 font-medium">Thông tin liên hệ</h3>
                   <p className="text-sm">Email: {selectedCustomer.email}</p>
                   <p className="text-sm">SĐT: {selectedCustomer.phone}</p>
+                  <p className="text-sm">Giới tính: {selectedCustomer.gender === "male" ? "Nam" : selectedCustomer.gender === "female" ? "Nữ" : "Khác"}</p>
                 </div>
                 <div>
                   <h3 className="mb-2 font-medium">Thông tin tài khoản</h3>
@@ -251,53 +244,6 @@ export default function CustomersPage() {
                   <p className="text-sm">Hoạt động gần nhất: {selectedCustomer.lastActivity}</p>
                   <p className="text-sm">Tổng số vé đã đặt: {selectedCustomer.totalBookings}</p>
                 </div>
-              </div>
-
-              <div className="mt-2">
-                <h3 className="mb-2 font-medium">Lịch sử giao dịch</h3>
-                <div className="max-h-[200px] overflow-y-auto rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Mã vé</TableHead>
-                        <TableHead>Tuyến</TableHead>
-                        <TableHead>Ngày</TableHead>
-                        <TableHead>Trạng thái</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <TableRow key={i}>
-                          <TableCell>BT{20000 + i}</TableCell>
-                          <TableCell>{i % 2 === 0 ? "Hà Nội - Hồ Chí Minh" : "Đà Nẵng - Hà Nội"}</TableCell>
-                          <TableCell>{`${15 - i}/04/2025`}</TableCell>
-                          <TableCell>
-                            <Badge variant={i === 0 ? "warning" : i === 4 ? "destructive" : "success"}>
-                              {i === 0 ? "Đang chờ" : i === 4 ? "Đã hủy" : "Hoàn thành"}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-
-              <div className="mt-4 flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => handleToggleStatus(selectedCustomer)}>
-                  {selectedCustomer.status === "blocked" ? (
-                    <>
-                      <Unlock className="mr-2 h-4 w-4" />
-                      <span>Mở khóa tài khoản</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="mr-2 h-4 w-4" />
-                      <span>Khóa tài khoản</span>
-                    </>
-                  )}
-                </Button>
-                <Button>Xem tất cả giao dịch</Button>
               </div>
             </div>
           )}
