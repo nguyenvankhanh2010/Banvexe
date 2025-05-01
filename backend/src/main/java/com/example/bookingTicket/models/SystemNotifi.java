@@ -5,7 +5,7 @@ import jakarta.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("SYSTEM_NOTIFI")
-public class SystemNotifi extends SystemNotification {
+public class SystemNotifi extends Notification {
     public void displayNotification() {
         // Implementation
     }

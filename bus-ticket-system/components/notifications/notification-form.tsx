@@ -1,125 +1,113 @@
-"use client"
+'use client';
 
-import type React from "react"
+import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { useState } from "react"
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { DialogFooter } from "@/components/ui/dialog"
-import { toast } from "@/hooks/use-toast"
-
-interface NotificationFormProps {
-  notification?: any
-  onSubmit: () => void
+// Định nghĩa interface cho Notification
+interface Notification {
+  id: string;
+  title: string;
+  content: string;
+  target: string;
+  createdAt: string;
 }
 
-export function NotificationForm({ notification, onSubmit }: NotificationFormProps) {
-  const isEditing = !!notification
+interface NotificationFormProps {
+  onSubmit: (newNotification: Notification) => void;
+  notification?: Notification | null;
+}
 
-  const [formData, setFormData] = useState({
-    title: notification?.title || "",
-    content: notification?.content || "",
-    target: notification?.target || "",
-  })
+export function NotificationForm({ onSubmit, notification = null }: NotificationFormProps) {
+  const [title, setTitle] = useState(notification?.title || '');
+  const [content, setContent] = useState(notification?.content || '');
+  const [target, setTarget] = useState(notification?.target || 'all');
+  const [error, setError] = useState<string | null>(null);
 
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
 
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
+    const payload = {
+      title,
+      content,
+      target,
+    };
 
-    // Clear error when field is changed
-    if (errors[field]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors[field]
-        return newErrors
-      })
+    try {
+      const isEditMode = notification !== null;
+      const url = isEditMode
+        ? `http://localhost:8080/notifications/${notification.id}`
+        : 'http://localhost:8080/notifications';
+      const method = isEditMode ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        credentials: 'include', // Gửi cookie để backend nhận session
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Lỗi khi ${isEditMode ? 'cập nhật' : 'tạo'} thông báo: ${response.statusText}`);
+      }
+
+      const updatedNotification: Notification = await response.json();
+      onSubmit(updatedNotification); // Trả thông báo mới/cập nhật về để cập nhật danh sách
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Đã xảy ra lỗi không xác định');
+      }
     }
-  }
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.title.trim()) {
-      newErrors.title = "Vui lòng nhập tiêu đề"
-    }
-
-    if (!formData.content.trim()) {
-      newErrors.content = "Vui lòng nhập nội dung"
-    }
-
-    if (!formData.target) {
-      newErrors.target = "Vui lòng chọn đối tượng nhận"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateForm()) {
-      return
-    }
-
-    // In a real app, this would call an API to save the notification
-    console.log("Saving notification:", formData)
-
-    toast({
-      title: isEditing ? "Cập nhật thành công" : "Tạo thông báo thành công",
-      description: `Thông báo "${formData.title}" đã được ${isEditing ? "cập nhật" : "tạo"} thành công`,
-    })
-
-    onSubmit()
-  }
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid gap-4 py-4">
-        <div className="space-y-2">
-          <Label htmlFor="title">Tiêu đề</Label>
-          <Input id="title" value={formData.title} onChange={(e) => handleChange("title", e.target.value)} />
-          {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="content">Nội dung</Label>
-          <Textarea
-            id="content"
-            rows={5}
-            value={formData.content}
-            onChange={(e) => handleChange("content", e.target.value)}
-          />
-          {errors.content && <p className="text-sm text-destructive">{errors.content}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="target">Đối tượng nhận</Label>
-          <Select value={formData.target} onValueChange={(value) => handleChange("target", value)}>
-            <SelectTrigger id="target">
-              <SelectValue placeholder="Chọn đối tượng nhận" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="staff">Nhân viên</SelectItem>
-              <SelectItem value="customer">Khách hàng</SelectItem>
-              <SelectItem value="all">Tất cả</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.target && <p className="text-sm text-destructive">{errors.target}</p>}
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && <p className="text-red-500">Lỗi: {error}</p>}
+      <div className="space-y-2">
+        <Label htmlFor="title">Tiêu đề</Label>
+        <Input
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Nhập tiêu đề..."
+          required
+        />
       </div>
 
-      <DialogFooter>
-        <Button type="submit">{isEditing ? "Cập nhật" : "Gửi thông báo"}</Button>
-      </DialogFooter>
+      <div className="space-y-2">
+        <Label htmlFor="content">Nội dung</Label>
+        <Input
+          id="content"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Nhập nội dung..."
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Đối tượng nhận</Label>
+        <Select value={target} onValueChange={setTarget}>
+          <SelectTrigger>
+            <SelectValue placeholder="Chọn đối tượng" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="staff">Nhân viên</SelectItem>
+            <SelectItem value="customer">Khách hàng</SelectItem>
+            <SelectItem value="all">Tất cả</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Button type="submit">{notification ? "Cập nhật" : "Lưu"}</Button>
     </form>
-  )
+  );
 }

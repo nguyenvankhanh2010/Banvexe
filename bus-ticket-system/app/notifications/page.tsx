@@ -1,14 +1,14 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Edit, Eye, Plus, Search, Trash } from "lucide-react"
-import { format } from "date-fns"
-import { vi } from "date-fns/locale"
+import { useState, useEffect } from "react";
+import { Edit, Eye, Plus, Search, Trash } from "lucide-react";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -16,107 +16,139 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { NotificationForm } from "@/components/notifications/notification-form"
-import { NotificationDetails } from "@/components/notifications/notification-details"
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { NotificationForm } from "@/components/notifications/notification-form";
+import { NotificationDetails } from "@/components/notifications/notification-details";
+
+// Định nghĩa interface cho Notification
+interface Notification {
+  id: string;
+  title: string;
+  content: string;
+  target: string;
+  createdAt: string;
+}
 
 export default function NotificationsPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [targetFilter, setTargetFilter] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedNotification, setSelectedNotification] = useState<any>(null)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [targetFilter, setTargetFilter] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Sample data - in a real app, this would come from an API
-  const notifications = [
-    {
-      id: 1,
-      title: "Cập nhật lịch trình",
-      content:
-        "Các chuyến xe đi Hải Phòng sẽ thay đổi lịch trình từ ngày 20/04/2023 do đường đang được sửa chữa. Vui lòng thông báo cho khách hàng.",
-      target: "staff",
-      createdAt: "2023-04-19T10:30:00",
-    },
-    {
-      id: 2,
-      title: "Khuyến mãi mới",
-      content:
-        "Giảm 10% cho tất cả các chuyến xe vào cuối tuần từ ngày 22/04 đến 30/04/2023. Áp dụng cho tất cả các tuyến.",
-      target: "customer",
-      createdAt: "2023-04-18T14:15:00",
-    },
-    {
-      id: 3,
-      title: "Bảo trì hệ thống",
-      content:
-        "Hệ thống sẽ được bảo trì từ 00:00 đến 02:00 ngày 21/04/2023. Trong thời gian này, hệ thống đặt vé sẽ tạm ngưng hoạt động.",
-      target: "all",
-      createdAt: "2023-04-17T09:45:00",
-    },
-    {
-      id: 4,
-      title: "Thông báo nghỉ lễ",
-      content:
-        "Thông báo lịch nghỉ lễ 30/4 và 1/5. Văn phòng sẽ đóng cửa từ ngày 29/4 đến hết ngày 1/5. Các chuyến xe vẫn hoạt động bình thường.",
-      target: "staff",
-      createdAt: "2023-04-15T11:20:00",
-    },
-    {
-      id: 5,
-      title: "Cập nhật giá vé",
-      content:
-        "Thông báo cập nhật giá vé cho các tuyến đường từ Hà Nội đi các tỉnh phía Bắc. Giá vé sẽ tăng 5% từ ngày 01/05/2023.",
-      target: "customer",
-      createdAt: "2023-04-14T16:30:00",
-    },
-  ]
+  // Gọi API để lấy danh sách thông báo khi component mount
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('http://localhost:8080/notifications', {
+          method: 'GET',
+          credentials: 'include', // Gửi cookie để backend nhận session
+        });
 
-  const handleView = (notification: any) => {
-    setSelectedNotification(notification)
-    setIsViewDialogOpen(true)
-  }
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Lỗi khi lấy danh sách thông báo: ${response.statusText}`);
+        }
 
-  const handleEdit = (notification: any) => {
-    setSelectedNotification(notification)
-    setIsEditDialogOpen(true)
-  }
+        const data: Notification[] = await response.json();
+        setNotifications(data);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError('Đã xảy ra lỗi không xác định');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleDelete = (notificationId: number) => {
-    // In a real app, this would call an API to delete the notification
-    console.log(`Deleting notification ${notificationId}`)
-    // Then refresh the data
-  }
+    fetchNotifications();
+  }, []);
+
+  const handleView = (notification: Notification) => {
+    setSelectedNotification(notification);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleEdit = (notification: Notification) => {
+    setSelectedNotification(notification);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = async (notificationId: string) => {
+    try {
+      const response = await fetch(`http://localhost:8080/notifications/${notificationId}`, {
+        method: 'DELETE',
+        credentials: 'include', // Gửi cookie để backend nhận session
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Lỗi khi xóa thông báo: ${response.statusText}`);
+      }
+
+      // Cập nhật danh sách sau khi xóa
+      setNotifications(notifications.filter((notification) => notification.id !== notificationId));
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Đã xảy ra lỗi không xác định');
+      }
+    }
+  };
+
+  const handleCreateNotification = (newNotification: Notification) => {
+    setNotifications([...notifications, newNotification]); // Thêm thông báo mới vào danh sách
+    setIsAddDialogOpen(false);
+  };
+
+  const handleUpdateNotification = (updatedNotification: Notification) => {
+    // Cập nhật thông báo trong danh sách
+    setNotifications(
+      notifications.map((notification) =>
+        notification.id === updatedNotification.id ? updatedNotification : notification
+      )
+    );
+    setIsEditDialogOpen(false);
+  };
 
   const filteredNotifications = notifications.filter((notification) => {
     const matchesSearch =
       notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      notification.content.toLowerCase().includes(searchTerm.toLowerCase())
+      notification.content.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesTarget = !targetFilter || notification.target === targetFilter
+    const matchesTarget = !targetFilter || notification.target === targetFilter;
 
-    return matchesSearch && matchesTarget
-  })
+    return matchesSearch && matchesTarget;
+  });
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return format(date, "HH:mm - dd/MM/yyyy", { locale: vi })
-  }
+    const date = new Date(dateString);
+    return format(date, "HH:mm - dd/MM/yyyy", { locale: vi });
+  };
 
   const getTargetLabel = (target: string) => {
-    switch (target) {
+    switch (target.toLowerCase()) {
       case "staff":
-        return "Nhân viên"
+        return "Nhân viên";
       case "customer":
-        return "Khách hàng"
+        return "Khách hàng";
       case "all":
-        return "Tất cả"
+        return "Tất cả";
       default:
-        return target
+        return target;
     }
-  }
+  };
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -134,7 +166,7 @@ export default function NotificationsPage() {
               <DialogTitle>Tạo thông báo mới</DialogTitle>
               <DialogDescription>Tạo thông báo mới để gửi đến nhân viên hoặc khách hàng</DialogDescription>
             </DialogHeader>
-            <NotificationForm onSubmit={() => setIsAddDialogOpen(false)} />
+            <NotificationForm onSubmit={handleCreateNotification} />
           </DialogContent>
         </Dialog>
       </div>
@@ -176,6 +208,9 @@ export default function NotificationsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {loading && <p>Đang tải...</p>}
+      {error && <p className="text-red-500">Lỗi: {error}</p>}
 
       <Card>
         <CardContent className="pt-6">
@@ -239,10 +274,13 @@ export default function NotificationsPage() {
             <DialogDescription>Cập nhật thông tin thông báo</DialogDescription>
           </DialogHeader>
           {selectedNotification && (
-            <NotificationForm notification={selectedNotification} onSubmit={() => setIsEditDialogOpen(false)} />
+            <NotificationForm
+              notification={selectedNotification}
+              onSubmit={handleUpdateNotification}
+            />
           )}
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
+  );
+} 

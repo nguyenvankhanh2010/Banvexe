@@ -7,7 +7,7 @@ import jakarta.persistence.ManyToOne;
 
 @Entity
 @DiscriminatorValue("OWNER")
-public class NotifiByOwner extends SystemNotification {
+public class NotifiByOwner extends Notification {
     @ManyToOne
     @JoinColumn(name = "sender_id")
     private Owner sender;

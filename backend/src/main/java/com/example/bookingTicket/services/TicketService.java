@@ -6,8 +6,6 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.example.bookingTicket.dto.TicketInfoDTO;
 import com.example.bookingTicket.dto.TicketInfoProjection;
 import com.example.bookingTicket.enums.EPaymentMethod;
 import com.example.bookingTicket.enums.EPaymentStatus;

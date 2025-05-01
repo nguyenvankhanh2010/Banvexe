@@ -45,7 +45,7 @@ public class User {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "notification_id")
-    private SystemNotification systemNotification;
+    private Notification systemNotification;
 
     // Getters and Setters
     public Long getId() {
@@ -95,15 +95,6 @@ public class User {
     public void setStatus(String status) {
         this.status = status;
     }
-
-    public SystemNotification getSystemNotification() {
-        return systemNotification;
-    }
-
-    public void setSystemNotification(SystemNotification systemNotification) {
-        this.systemNotification = systemNotification;
-    }
-
     // Methods
     public void getBookingInfo() {
 
@@ -111,5 +102,13 @@ public class User {
 
     public void manageInfo() {
         // Implementation
+    }
+
+    public Notification getSystemNotification() {
+        return systemNotification;
+    }
+
+    public void setSystemNotification(Notification systemNotification) {
+        this.systemNotification = systemNotification;
     }
 }

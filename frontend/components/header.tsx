@@ -3,13 +3,16 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Globe, Menu, Phone, X, User, CreditCard, History, MapPin, Lock, LogOut } from 'lucide-react'
+import { Globe, Menu, Phone, X, User, CreditCard, History, MapPin, Lock, LogOut, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { usePathname, useRouter } from "next/navigation"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { isLoggedIn, getUserName, logout } from "@/lib/auth"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import axios from "axios"
 
 const navigation = [
   { name: "TRANG CHỦ", href: "/" },
@@ -39,48 +42,56 @@ export function Header() {
   const [userLoggedIn, setUserLoggedIn] = useState(false)
   const [userName, setUserName] = useState("Người dùng")
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [notifications, setNotifications] = useState<
+    {
+      id: string
+      title: string
+      content: string
+      time: string
+      type: "booking" | "payment" | "system" | "support"
+      read: boolean
+    }[]
+  >([])
 
   // Kiểm tra trạng thái đăng nhập từ session
   const checkLoginStatus = useCallback(() => {
-    if (typeof window !== 'undefined') {  // Kiểm tra nếu đang ở client-side
-      const loggedIn = isLoggedIn();
-      const name = getUserName();
-      
-      setUserLoggedIn(loggedIn);
+    if (typeof window !== "undefined") {
+      const loggedIn = isLoggedIn()
+      const name = getUserName()
+
+      setUserLoggedIn(loggedIn)
       if (name) {
-        setUserName(name);
+        setUserName(name)
       }
     }
   }, [])
 
   // Check if user is logged in and get user name
   useEffect(() => {
-    checkLoginStatus();
-    
-    // Thêm event listener để lắng nghe thay đổi từ session storage
+    checkLoginStatus()
+
     const handleStorageChange = () => {
-      checkLoginStatus();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Kiểm tra cookie nếu cần
+      checkLoginStatus()
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+
     const getCookie = (name: string) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(';').shift();
+      const value = `; ${document.cookie}`
+      const parts = value.split(`; ${name}=`)
+      if (parts.length === 2) return parts.pop()?.split(";").shift()
     }
-    
-    const userCookie = getCookie('userName');
+
+    const userCookie = getCookie("userName")
     if (userCookie && !userLoggedIn) {
-      setUserName(userCookie);
-      setUserLoggedIn(true);
+      setUserName(userCookie)
+      setUserLoggedIn(true)
     }
-    
+
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange)
     }
-  }, [pathname, checkLoginStatus, userLoggedIn]);
+  }, [pathname, checkLoginStatus, userLoggedIn])
 
   // Set active tab based on current path
   useEffect(() => {
@@ -95,35 +106,130 @@ export function Header() {
     const interval = setInterval(() => {
       checkLoginStatus()
     }, 2000)
-    
+
     return () => clearInterval(interval)
   }, [checkLoginStatus])
 
+  // Fetch notifications from backend
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await axios.get<
+          {
+            id: string;
+            title: string;
+            content: string;
+            target: string;
+            createdAt: string;
+            read: boolean;
+          }[]
+        >("http://localhost:8080/notifications", {
+          withCredentials: true,
+        });
+
+        // Kiểm tra dữ liệu trả về
+        if (!Array.isArray(response.data)) {
+          throw new Error("Dữ liệu trả về từ API không phải là mảng");
+        }
+
+        // Lọc chỉ lấy thông báo có target là "customer"
+        const customerNotifications = response.data.filter(
+          (item) => item.target.toLowerCase() === "customer"
+        );
+
+        // Ánh xạ dữ liệu từ API sang định dạng notifications của Header
+        const fetchedNotifications = customerNotifications.map((item) => {
+          // Ánh xạ target sang type (chỉ cần type "payment" vì đã lọc customer)
+          const type = "payment" as const;
+
+          return {
+            id: item.id,
+            title: item.title,
+            content: item.content,
+            time: new Date(item.createdAt).toLocaleString("vi-VN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+            type,
+            read: item.read || false,
+          };
+        });
+
+        setNotifications(fetchedNotifications);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
+    if (userLoggedIn) {
+      fetchNotifications();
+    }
+  }, [userLoggedIn])
+
   const handleLogout = async () => {
     try {
-      // Sử dụng hàm logout từ auth lib
-      const result = await logout();
-      
-      // Update state
-      setUserLoggedIn(false);
-      setUserName("Người dùng");
-      
-      // Redirect to login page
-      router.push("/dang-nhap");
+      const result = await logout()
+      setUserLoggedIn(false)
+      setUserName("Người dùng")
+      router.push("/dang-nhap")
     } catch (error) {
-      console.error("Logout error:", error);
-      setUserLoggedIn(false);
-      setUserName("Người dùng");
-      router.push("/dang-nhap");
+      console.error("Logout error:", error)
+      setUserLoggedIn(false)
+      setUserName("Người dùng")
+      router.push("/dang-nhap")
     }
-  };
+  }
+
+  const markAsRead = (id: string) => {
+    setNotifications((prev) => prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif)))
+  }
+
+  const typeMap = {
+    booking: { label: "Đặt vé", variant: "default" },
+    payment: { label: "Thanh toán", variant: "secondary" },
+    system: { label: "Hệ thống", variant: "destructive" },
+    support: { label: "Hỗ trợ", variant: "outline" },
+  }
+
+  const NotificationItem = ({
+    notification,
+    onMarkAsRead,
+  }: {
+    notification: {
+      id: string
+      title: string
+      content: string
+      time: string
+      type: "booking" | "payment" | "system" | "support"
+      read: boolean
+    }
+    onMarkAsRead: (id: string) => void
+  }) => {
+    const [expanded, setExpanded] = useState(false)
+
+    return (
+      <div className="p-4 hover:bg-muted/50 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-sm">{notification.title}</p>
+            </div>
+            <p className={cn("text-xs text-muted-foreground", expanded ? "" : "line-clamp-2")}>
+              {notification.content}
+            </p>
+            <p className="text-xs text-muted-foreground">{notification.time}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="bg-gradient-to-r from-futa-orange to-orange-500">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-4">
-            {/* Logo - always centered */}
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden text-white">
@@ -186,14 +292,46 @@ export function Header() {
             </div>
           </div>
 
-          {/* Center logo */}
           <div className="flex-1 flex justify-center">
             <Link href="/" className="flex items-center gap-2">
               <span className="sr-only">FUTA Bus Lines</span>
             </Link>
           </div>
 
-          <div>
+          <div className="flex items-center gap-4">
+            {userLoggedIn ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative text-white">
+                    <Bell className="h-5 w-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="end">
+                  <div className="p-4 font-medium border-b">Thông báo</div>
+                  {notifications.length > 0 ? (
+                    <ScrollArea className="h-[400px]">
+                      <div className="divide-y">
+                        {notifications.map((notification) => (
+                          <NotificationItem
+                            key={notification.id}
+                            notification={notification}
+                            onMarkAsRead={markAsRead}
+                          />
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <div className="flex h-32 items-center justify-center">
+                      <div className="flex flex-col items-center text-center">
+                        <Bell className="h-8 w-8 text-muted-foreground/50" />
+                        <p className="mt-2 text-muted-foreground">Không có thông báo nào</p>
+                      </div>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+            ) : null}
+
             {userLoggedIn ? (
               <div className="flex items-center gap-2" ref={dropdownRef}>
                 <DropdownMenu>
@@ -207,10 +345,7 @@ export function Header() {
                     {userMenuItems.map((item) => (
                       <DropdownMenuItem key={item.name} asChild className="p-0">
                         {item.name === "Đăng xuất" ? (
-                          <button 
-                            onClick={handleLogout} 
-                            className="w-full flex items-center px-2 py-2.5"
-                          >
+                          <button onClick={handleLogout} className="w-full flex items-center px-2 py-2.5">
                             <div className={`${item.color} rounded-full p-2 mr-3`}>
                               <item.icon className="h-5 w-5 text-white" />
                             </div>

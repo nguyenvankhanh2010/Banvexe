@@ -1,9 +1,11 @@
 package com.example.bookingTicket.models;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.example.bookingTicket.enums.ENotifiType;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,6 +13,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -28,6 +31,9 @@ public class Notification {
 
     @Column(name = "notifi_id")
     private String notifiId;
+
+    @Column(name = "title")
+    private String title;
 
     @Column(nullable = false)
     private String receiving;
@@ -92,4 +98,17 @@ public class Notification {
     public void setType(ENotifiType type) {
         this.type = type;
     }
+
+    
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+
+    @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserNotification> userNotifications;
 } 
