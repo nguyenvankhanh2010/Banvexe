@@ -1,11 +1,11 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CalendarIcon, Clock } from "lucide-react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
+import axios from "axios"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,34 +21,64 @@ interface TripFormProps {
   onSubmit: () => void
 }
 
+interface Bus {
+  id: number;
+  busNumber: string;
+  busType: string;
+  totalSeats: number;
+}
+
 export function TripForm({ trip, onSubmit }: TripFormProps) {
-  const isEditing = !!trip
+  const isEditing = !!trip;
 
   const [formData, setFormData] = useState({
-    id: trip?.id || "",
-    busId: trip?.busId || "",
+    tripId: trip?.tripId || "",
+    busId: trip?.bus?.id?.toString() || "",
     busType: trip?.busType || "",
-    seats: trip?.seats || "",
-    departure: trip?.departure || "",
+    seats: trip?.availableSeats?.toString() || "",
+    departure: trip?.origin || "",
     destination: trip?.destination || "",
     date: trip ? new Date(trip.departureTime) : new Date(),
     time: trip ? format(new Date(trip.departureTime), "HH:mm") : "08:00",
-    price: trip?.price || "",
-  })
+    price: trip?.price?.toString() || "",
+    arrivalTime: trip ? new Date(trip.arrivalTime) : new Date(),
+  });
+
+  const [buses, setBuses] = useState<Bus[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Lấy danh sách xe bus từ backend
+  useEffect(() => {
+    const fetchBuses = async () => {
+      try {
+        const response = await axios.get<Bus[]>("/api/trips/buses");
+        setBuses(response.data);
+      } catch (error) {
+        console.error("Error fetching buses:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải danh sách xe bus",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchBuses();
+  }, []);
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     // Validate form
     if (
-      !formData.id ||
+      !formData.tripId ||
       !formData.busId ||
       !formData.busType ||
       !formData.seats ||
@@ -60,42 +90,95 @@ export function TripForm({ trip, onSubmit }: TripFormProps) {
         title: "Lỗi",
         description: "Vui lòng điền đầy đủ thông tin",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    // In a real app, this would call an API to save the trip
-    console.log("Saving trip:", formData)
+    setLoading(true);
 
-    toast({
-      title: isEditing ? "Cập nhật thành công" : "Thêm mới thành công",
-      description: `Chuyến đi ${formData.id} đã được ${isEditing ? "cập nhật" : "thêm"} vào hệ thống`,
-    })
+    try {
+      // Kết hợp date và time để tạo departureTime
+      const [hours, minutes] = formData.time.split(":").map(Number);
+      const departureDateTime = new Date(formData.date);
+      departureDateTime.setHours(hours, minutes, 0, 0);
 
-    onSubmit()
-  }
+      // Tạo arrivalTime (giả định arrivalTime cách departureTime 5 giờ)
+      const arrivalDateTime = new Date(departureDateTime);
+      arrivalDateTime.setHours(arrivalDateTime.getHours() + 5);
 
-  // Sample data for dropdowns
-  const busTypes = ["Limousine", "Giường nằm", "Ghế ngồi"]
-  const locations = ["Hà Nội", "Hải Phòng", "Nam Định", "Thanh Hóa", "Ninh Bình", "Quảng Ninh"]
+      const tripData = {
+        tripId: formData.tripId,
+        origin: formData.departure,
+        destination: formData.destination,
+        departureTime: departureDateTime.toISOString(),
+        arrivalTime: arrivalDateTime.toISOString(),
+        busType: formData.busType,
+        price: parseFloat(formData.price),
+        availableSeats: parseInt(formData.seats, 10),
+      };
+
+      if (isEditing) {
+        // Cập nhật chuyến xe
+        await axios.put(`/api/trips/${trip.id}`, tripData, {
+          params: { busId: formData.busId },
+        });
+      } else {
+        // Tạo mới chuyến xe
+        await axios.post("/api/trips", tripData, {
+          params: { busId: formData.busId },
+        });
+      }
+
+      toast({
+        title: isEditing ? "Cập nhật thành công" : "Thêm mới thành công",
+        description: `Chuyến xe ${formData.tripId} đã được ${isEditing ? "cập nhật" : "thêm"} vào hệ thống`,
+      });
+
+      onSubmit();
+    } catch (error: any) {
+      console.error("Error saving trip:", error);
+      toast({
+        title: "Lỗi",
+        description: error.response?.data?.message || "Có lỗi xảy ra khi lưu chuyến xe",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Dữ liệu mẫu cho busTypes và locations (nên thay bằng API từ backend)
+  const busTypes = ["Limousine", "Giường nằm", "Ghế ngồi"];
+  const locations = ["Hà Nội", "Hải Phòng", "Nam Định", "Thanh Hóa", "Ninh Bình", "Quảng Ninh"];
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="id">Mã chuyến xe</Label>
+            <Label htmlFor="tripId">Mã chuyến xe</Label>
             <Input
-              id="id"
-              value={formData.id}
-              onChange={(e) => handleChange("id", e.target.value)}
+              id="tripId"
+              value={formData.tripId}
+              onChange={(e) => handleChange("tripId", e.target.value)}
               disabled={isEditing}
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="busId">Mã xe</Label>
-            <Input id="busId" value={formData.busId} onChange={(e) => handleChange("busId", e.target.value)} />
+            <Select value={formData.busId} onValueChange={(value) => handleChange("busId", value)}>
+              <SelectTrigger id="busId">
+                <SelectValue placeholder="Chọn xe" />
+              </SelectTrigger>
+              <SelectContent>
+                {buses.map((bus) => (
+                  <SelectItem key={bus.id} value={bus.id.toString()}>
+                    {bus.busNumber} ({bus.busType}, {bus.totalSeats} chỗ)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -209,8 +292,10 @@ export function TripForm({ trip, onSubmit }: TripFormProps) {
       </div>
 
       <DialogFooter>
-        <Button type="submit">{isEditing ? "Cập nhật" : "Thêm mới"}</Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "Đang xử lý..." : isEditing ? "Cập nhật" : "Thêm mới"}
+        </Button>
       </DialogFooter>
     </form>
-  )
+  );
 }

@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CalendarIcon, Edit, Plus, Search, Trash } from "lucide-react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
+import axios from "axios"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,6 +23,19 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Label } from "@/components/ui/label"
 import { TripForm } from "@/components/trips/trip-form"
+import { toast } from "@/hooks/use-toast"
+
+// Định nghĩa interface cho Trip dựa trên dữ liệu từ backend (TripDTO)
+interface Trip {
+  id: number;
+  tripId: string;
+  origin: string;
+  destination: string;
+  departureTime: string;
+  bus: { id: number; busNumber: string; busType: string; totalSeats: number };
+  price: number;
+  availableSeats: number;
+}
 
 export default function TripsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -30,100 +44,86 @@ export default function TripsPage() {
   const [filterDestination, setFilterDestination] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedTrip, setSelectedTrip] = useState<any>(null)
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null)
+  const [trips, setTrips] = useState<Trip[]>([])
+  const [loading, setLoading] = useState(false)
 
-  // Sample data - in a real app, this would come from an API
-  const trips = [
-    {
-      id: "TX001",
-      route: "Hà Nội - Hải Phòng",
-      departure: "Hà Nội",
-      destination: "Hải Phòng",
-      departureTime: "2023-04-20T08:00:00",
-      busId: "XE001",
-      busType: "Limousine",
-      seats: 16,
-      price: 250000,
-    },
-    {
-      id: "TX002",
-      route: "Hà Nội - Nam Định",
-      departure: "Hà Nội",
-      destination: "Nam Định",
-      departureTime: "2023-04-20T09:30:00",
-      busId: "XE005",
-      busType: "Giường nằm",
-      seats: 32,
-      price: 180000,
-    },
-    {
-      id: "TX003",
-      route: "Hà Nội - Thanh Hóa",
-      departure: "Hà Nội",
-      destination: "Thanh Hóa",
-      departureTime: "2023-04-21T10:15:00",
-      busId: "XE008",
-      busType: "Ghế ngồi",
-      seats: 45,
-      price: 150000,
-    },
-    {
-      id: "TX004",
-      route: "Hà Nội - Ninh Bình",
-      departure: "Hà Nội",
-      destination: "Ninh Bình",
-      departureTime: "2023-04-22T07:00:00",
-      busId: "XE003",
-      busType: "Limousine",
-      seats: 16,
-      price: 200000,
-    },
-    {
-      id: "TX005",
-      route: "Hà Nội - Quảng Ninh",
-      departure: "Hà Nội",
-      destination: "Quảng Ninh",
-      departureTime: "2023-04-23T06:30:00",
-      busId: "XE010",
-      busType: "Giường nằm",
-      seats: 32,
-      price: 220000,
-    },
-  ]
+  // Lấy danh sách chuyến đi từ backend
+  useEffect(() => {
+    const fetchTrips = async () => {
+      setLoading(true)
+      try {
+        const response = await axios.get<Trip[]>("/api/trips") // Sử dụng proxy
+        setTrips(response.data)
+        if (response.data.length === 0) {
+          toast({
+            title: "Thông báo",
+            description: "Không có chuyến đi nào trong hệ thống",
+            variant: "default",
+          })
+        }
+      } catch (error: any) {
+        console.error("Error fetching trips:", error)
+        toast({
+          title: "Lỗi",
+          description: error.response?.status === 404
+            ? "Không tìm thấy API /api/trips. Vui lòng kiểm tra backend và cấu hình proxy."
+            : error.response?.data?.message || "Không thể tải danh sách chuyến đi",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+  
+    fetchTrips()
+  }, [])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return format(date, "HH:mm - dd/MM/yyyy", { locale: vi })
   }
 
-  const handleEdit = (trip: any) => {
+  const handleEdit = (trip: Trip) => {
     setSelectedTrip(trip)
     setIsEditDialogOpen(true)
   }
 
-  const handleDelete = (tripId: string) => {
-    // In a real app, this would call an API to delete the trip
-    console.log(`Deleting trip ${tripId}`)
-    // Then refresh the data
+  const handleDelete = async (tripId: number) => {
+    try {
+      await axios.delete(`/api/${tripId}`)
+      setTrips(trips.filter((trip) => trip.id !== tripId))
+      toast({
+        title: "Xóa thành công",
+        description: `Chuyến xe ${tripId} đã được xóa`,
+      })
+    } catch (error: any) {
+      console.error("Error deleting trip:", error)
+      toast({
+        title: "Lỗi",
+        description: error.response?.data?.message || "Không thể xóa chuyến xe",
+        variant: "destructive",
+      })
+    }
   }
 
   const filteredTrips = trips.filter((trip) => {
     const matchesSearch =
-      trip.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trip.route.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trip.busId.toLowerCase().includes(searchTerm.toLowerCase())
+      trip.tripId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${trip.origin} - ${trip.destination}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      trip.bus.busNumber.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesDate = !filterDate || new Date(trip.departureTime).toDateString() === filterDate.toDateString()
 
-    const matchesDeparture = !filterDeparture || trip.departure === filterDeparture
+    const matchesDeparture = !filterDeparture || trip.origin === filterDeparture
 
     const matchesDestination = !filterDestination || trip.destination === filterDestination
 
     return matchesSearch && matchesDate && matchesDeparture && matchesDestination
   })
 
-  // Get unique departure and destination locations for filters
-  const departureLocations = Array.from(new Set(trips.map((trip) => trip.departure)))
+  // Lấy danh sách các địa điểm khởi hành và đích đến duy nhất
+  const departureLocations = Array.from(new Set(trips.map((trip) => trip.origin)))
   const destinationLocations = Array.from(new Set(trips.map((trip) => trip.destination)))
 
   return (
@@ -142,7 +142,19 @@ export default function TripsPage() {
               <DialogTitle>Thêm chuyến đi mới</DialogTitle>
               <DialogDescription>Điền đầy đủ thông tin để tạo chuyến đi mới</DialogDescription>
             </DialogHeader>
-            <TripForm onSubmit={() => setIsAddDialogOpen(false)} />
+            <TripForm onSubmit={() => {
+              setIsAddDialogOpen(false)
+              // Làm mới danh sách sau khi thêm
+              const fetchTrips = async () => {
+                try {
+                  const response = await axios.get<Trip[]>("/api/trips")
+                  setTrips(response.data)
+                } catch (error) {
+                  console.error("Error fetching trips:", error)
+                }
+              }
+              fetchTrips()
+            }} />
           </DialogContent>
         </Dialog>
       </div>
@@ -184,7 +196,7 @@ export default function TripsPage() {
 
             <div className="space-y-2">
               <Label>Bến đi</Label>
-              <Select value={filterDeparture} onValueChange={setFilterDeparture}>
+              <Select value={filterDeparture} onValueChange={(value) => setFilterDeparture(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Tất cả" />
                 </SelectTrigger>
@@ -201,7 +213,7 @@ export default function TripsPage() {
 
             <div className="space-y-2">
               <Label>Bến đến</Label>
-              <Select value={filterDestination} onValueChange={setFilterDestination}>
+              <Select value={filterDestination} onValueChange={(value) => setFilterDestination(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Tất cả" />
                 </SelectTrigger>
@@ -221,45 +233,49 @@ export default function TripsPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mã chuyến</TableHead>
-                <TableHead>Mã xe - Loại xe - Số chỗ</TableHead>
-                <TableHead>Bến đi - Bến đến</TableHead>
-                <TableHead>Thời gian khởi hành</TableHead>
-                <TableHead>Giá vé</TableHead>
-                <TableHead className="text-right">Hành động</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTrips.map((trip) => (
-                <TableRow key={trip.id}>
-                  <TableCell className="font-medium">{trip.id}</TableCell>
-                  <TableCell>
-                    {trip.busId} - {trip.busType} - {trip.seats} chỗ
-                  </TableCell>
-                  <TableCell>
-                    {trip.departure} - {trip.destination}
-                  </TableCell>
-                  <TableCell>{formatDate(trip.departureTime)}</TableCell>
-                  <TableCell>{trip.price.toLocaleString()}đ</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="icon" onClick={() => handleEdit(trip)}>
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Sửa</span>
-                      </Button>
-                      <Button variant="outline" size="icon" onClick={() => handleDelete(trip.id)}>
-                        <Trash className="h-4 w-4" />
-                        <span className="sr-only">Xóa</span>
-                      </Button>
-                    </div>
-                  </TableCell>
+          {loading ? (
+            <div className="text-center">Đang tải...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Mã chuyến</TableHead>
+                  <TableHead>Mã xe - Loại xe - Số chỗ</TableHead>
+                  <TableHead>Bến đi - Bến đến</TableHead>
+                  <TableHead>Thời gian khởi hành</TableHead>
+                  <TableHead>Giá vé</TableHead>
+                  <TableHead className="text-right">Hành động</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredTrips.map((trip) => (
+                  <TableRow key={trip.id}>
+                    <TableCell className="font-medium">{trip.tripId}</TableCell>
+                    <TableCell>
+                      {trip.bus.busNumber} - {trip.bus.busType} - {trip.bus.totalSeats} chỗ
+                    </TableCell>
+                    <TableCell>
+                      {trip.origin} - {trip.destination}
+                    </TableCell>
+                    <TableCell>{formatDate(trip.departureTime)}</TableCell>
+                    <TableCell>{trip.price.toLocaleString()}đ</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="icon" onClick={() => handleEdit(trip)}>
+                          <Edit className="h-4 w-4" />
+                          <span className="sr-only">Sửa</span>
+                        </Button>
+                        <Button variant="outline" size="icon" onClick={() => handleDelete(trip.id)}>
+                          <Trash className="h-4 w-4" />
+                          <span className="sr-only">Xóa</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -269,7 +285,19 @@ export default function TripsPage() {
             <DialogTitle>Chỉnh sửa chuyến đi</DialogTitle>
             <DialogDescription>Cập nhật thông tin chuyến đi</DialogDescription>
           </DialogHeader>
-          {selectedTrip && <TripForm trip={selectedTrip} onSubmit={() => setIsEditDialogOpen(false)} />}
+          {selectedTrip && <TripForm trip={selectedTrip} onSubmit={() => {
+            setIsEditDialogOpen(false)
+            // Làm mới danh sách sau khi chỉnh sửa
+            const fetchTrips = async () => {
+              try {
+                const response = await axios.get<Trip[]>("/api/trips")
+                setTrips(response.data)
+              } catch (error) {
+                console.error("Error fetching trips:", error)
+              }
+            }
+            fetchTrips()
+          }} />}
         </DialogContent>
       </Dialog>
     </div>

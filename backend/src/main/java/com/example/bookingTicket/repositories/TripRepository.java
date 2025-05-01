@@ -16,4 +16,5 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     List<Trip> findTripsByFilters(@Param("origin") String origin, @Param("destination") String destination, @Param("date") LocalDateTime date);
 
     Trip findByTripId(String tripId);
+    boolean existsByTripId(String tripId);
 }

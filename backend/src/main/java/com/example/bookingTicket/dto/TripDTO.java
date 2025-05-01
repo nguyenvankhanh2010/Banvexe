@@ -13,6 +13,7 @@ public class TripDTO {
     private double price;
     private int availableSeats;
     private BusDTO bus;
+    private Long busId;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -34,4 +35,11 @@ public class TripDTO {
     public void setAvailableSeats(int availableSeats) { this.availableSeats = availableSeats; }
     public BusDTO getBus() { return bus; }
     public void setBus(BusDTO bus) { this.bus = bus; }
+    public Long getBusId() {
+        return busId;
+    }
+
+    public void setBusId(Long busId) {
+        this.busId = busId;
+    }
 }
