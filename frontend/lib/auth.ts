@@ -102,7 +102,10 @@ export const login = async (
   try {
     console.log("Đang đăng nhập với:", userName);
 
-    const apiUrl = process.env.API_URL || "http://localhost:8080"; // Mặc định dùng localhost nếu không có biến môi trường
+    const apiUrl = process.env.API_URL;
+    if (!apiUrl) {
+      throw new Error("API_URL environment variable is not set");
+    }
     const response = await fetch(`${apiUrl}/dang-nhap`, {
       method: "POST",
       headers: {
@@ -147,7 +150,10 @@ export const login = async (
  */
 export const logout = async (): Promise<{ success: boolean; message: string }> => {
   try {
-    const apiUrl = process.env.API_URL || "http://localhost:8080"; // Mặc định dùng localhost nếu không có biến môi trường
+    const apiUrl = process.env.API_URL;
+    if (!apiUrl) {
+      throw new Error("API_URL environment variable is not set");
+    }
     const response = await fetch(`${apiUrl}/dang-xuat`, {
       method: "POST",
       credentials: "include",
