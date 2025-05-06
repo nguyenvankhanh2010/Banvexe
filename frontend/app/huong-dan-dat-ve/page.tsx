@@ -16,7 +16,7 @@ export default function BookingGuidePage() {
           <div className="container">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
               <span className="text-futa-orange">HƯỚNG DẪN MUA VÉ XE TRÊN WEBSITE </span>
-              <span className="text-futa-green">FUTABUS.VN</span>
+              <span className="text-futa-green">VIETBUS.VN</span>
             </h1>
           </div>
         </section>
@@ -32,7 +32,7 @@ export default function BookingGuidePage() {
               <div className="relative w-32 h-32">
                 <Image
                   src="/placeholder.svg?height=128&width=128"
-                  alt="FUTA Bus Lines Logo"
+                  alt="Vietbus Logo"
                   width={128}
                   height={128}
                   className="object-contain"
@@ -75,20 +75,20 @@ export default function BookingGuidePage() {
               </h2>
               <div className="space-y-4 text-gray-700">
                 <p>
-                  Công Ty Cổ phần Xe Khách Phương Trang - FUTA Bus Lines xin gửi lời cảm ơn chân thành đến Quý Khách
+                  Công Ty Cổ phần Vietbus xin gửi lời cảm ơn chân thành đến Quý Khách
                   hàng đã tin tưởng và sử dụng dịch vụ của chúng tôi. Chúng tôi luôn hoạt động với tôn chỉ "Chất lượng
                   là danh dự" và nỗ lực không ngừng để mang đến trải nghiệm dịch vụ tối ưu dành cho Khách hàng.
                 </p>
                 <p>
                   Chúng tôi không chỉ đảm bảo các chuyến xe an toàn, chất lượng và đúng hẹn, mà còn chú trọng đến trải
-                  nghiệm mua vé của Khách hàng. Chúng tôi đã cải tiến website mua vé trực tuyến{" "}
+                  nghiệm mua vé của Khách hàng. Chúng tôi đã cải tiến website mua vé trực tuyến
                   <Link href="#" className="text-futa-orange font-medium">
-                    Thông tin vé | Ticket Information | FUTA Bus Lines | Tổng Đài đặt vé và Chăm Sóc Khách Hàng 19006067
-                  </Link>{" "}
+                    Thông tin vé | Ticket Information | Vietbus | Tổng Đài đặt vé và Chăm Sóc Khách Hàng 22110XXX 
+                  </Link>
                   để đảm bảo việc mua vé dễ dàng và tiện lợi hơn bao giờ hết.
                 </p>
                 <p>
-                  Bên cạnh đó, chúng tôi tự hào giới thiệu ứng dụng mua vé FUTA Bus, giúp Khách hàng tiết kiệm thời gian
+                  Bên cạnh đó, chúng tôi tự hào giới thiệu ứng dụng mua vé Vietbus, giúp Khách hàng tiết kiệm thời gian
                   mua vé. Qua ứng dụng này, Khách hàng có thể tra cứu thông tin về lịch trình, chọn ghế/giường và thanh
                   toán nhanh chóng, thuận tiện trên điện thoại di động.
                 </p>
@@ -102,9 +102,9 @@ export default function BookingGuidePage() {
           <div className="container">
             <h2 className="text-2xl font-bold text-center mb-8">
               <span className="text-futa-green">Bước 1: Những trải nghiệm nổi bật mà Ứng Dụng Mua Vé </span>
-              <span className="text-futa-orange">FUTA Bus</span>
+              <span className="text-futa-orange">Vietbus</span>
               <span className="text-futa-green"> và Website </span>
-              <span className="text-futa-orange">futabus.vn</span>
+              <span className="text-futa-orange">vietbus.vn</span>
               <span className="text-futa-green"> mang lại</span>
             </h2>
 
@@ -149,7 +149,7 @@ export default function BookingGuidePage() {
                     <Users className="h-16 w-16" />
                   </div>
                   <h3 className="font-semibold text-lg mb-2">
-                    Dễ dàng kết hợp và nhận ưu đãi khi sử dụng dịch vụ khác của Phương Trang
+                    Dễ dàng kết hợp và nhận ưu đãi khi sử dụng dịch vụ khác của Vietbus
                   </h3>
                   <p className="text-gray-600">Như Taxi, Trạm Dừng, Vận Chuyển Hàng Hoá...</p>
                 </CardContent>
@@ -163,7 +163,7 @@ export default function BookingGuidePage() {
                   <h3 className="font-semibold text-lg mb-2">
                     Khi đăng ký thành viên, khách hàng còn nhận nhiều ưu đãi
                   </h3>
-                  <p className="text-gray-600">Cũng như nhiều phần quà hấp dẫn từ FUTA Bus Lines.</p>
+                  <p className="text-gray-600">Cũng như nhiều phần quà hấp dẫn từ Vietbus.</p>
                 </CardContent>
               </Card>
 
@@ -193,7 +193,7 @@ export default function BookingGuidePage() {
                   <div className="w-20 h-20 rounded-full bg-futa-orange text-white flex items-center justify-center text-2xl font-bold mb-2">
                     01
                   </div>
-                  <p className="text-sm">Truy cập vào địa chỉ futabus.vn</p>
+                  <p className="text-sm">Truy cập vào địa chỉ vietbus.vn</p>
                 </div>
                 <div className="hidden md:block h-0.5 flex-1 bg-gray-300 mx-2"></div>
                 <div className="flex flex-col items-center text-center">
@@ -228,13 +228,13 @@ export default function BookingGuidePage() {
 
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h3 className="text-xl font-bold text-center mb-6">
-                Bước 1: Truy cập địa chỉ <span className="text-futa-orange">futabus.vn</span>
+                Bước 1: Truy cập địa chỉ <span className="text-futa-orange">vietbus.vn</span>
               </h3>
 
               <div className="relative max-w-4xl mx-auto">
                 <Image
                   src="/images/booking-guide-step2.png"
-                  alt="Truy cập website FUTA Bus"
+                  alt="Truy cập website Vietbus"
                   width={1000}
                   height={500}
                   className="object-contain mx-auto"
@@ -243,8 +243,8 @@ export default function BookingGuidePage() {
 
               <div className="text-center mt-6">
                 <p className="mb-4">
-                  Tải ứng dụng tại <span className="text-futa-orange font-medium">futabus.vn</span> hoặc tìm ứng dụng
-                  Futa Bus trên
+                  Tải ứng dụng tại <span className="text-futa-orange font-medium">vietbus.vn</span> hoặc tìm ứng dụng
+                  Vietbus trên
                 </p>
                 <div className="flex justify-center gap-4">
                   <Link href="https://play.google.com/store/apps/details?id=vn.futabus.passenger" target="_blank">
@@ -406,8 +406,7 @@ export default function BookingGuidePage() {
                   </ul>
                   <p className="mt-2 text-futa-orange font-medium">
                     Lưu ý quan trọng: Quý khách vui lòng có mặt tại bến xuất phát của xe trước ít nhất 30 phút giờ xe
-                    khởi hành, mang theo thông báo đã thanh toán vé thành công có chứa mã vé được gửi từ hệ thống FUTA
-                    BUS LINES.
+                    khởi hành, mang theo thông báo đã thanh toán vé thành công có chứa mã vé được gửi từ hệ thống Vietbus.
                   </p>
                 </div>
               </div>
@@ -434,7 +433,7 @@ export default function BookingGuidePage() {
                 <div className="mt-4 text-gray-700">
                   <p>Tại bước này, bạn có thể chọn một trong các phương thức thanh toán sau:</p>
                   <ul className="list-disc pl-6 mt-2 space-y-1">
-                    <li>FUTAPay - Ví điện tử của FUTA Bus Lines</li>
+                    <li>VietbusPay - Ví điện tử của Vietbus</li>
                     <li>ZaloPay</li>
                     <li>Momo</li>
                     <li>VNPay</li>
@@ -486,7 +485,7 @@ export default function BookingGuidePage() {
         <section className="py-12 bg-futa-orange text-white">
           <div className="container">
             <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-2xl md:text-3xl font-bold mb-6">Đặt vé xe Phương Trang ngay hôm nay!</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-6">Đặt vé xe Vietbus ngay hôm nay!</h2>
               <p className="mb-8">Trải nghiệm dịch vụ đặt vé trực tuyến tiện lợi và nhanh chóng</p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Link href="/">

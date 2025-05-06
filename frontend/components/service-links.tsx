@@ -10,7 +10,7 @@ const services = [
   },
   {
     id: 2,
-    title: "Mua vé Phương Trang",
+    title: "Mua vé Vietbus",
     icon: "/images/ketnoifuta2-removebg-preview.png",
     href: "/lich-trinh",
     highlight: true,
@@ -34,9 +34,9 @@ export function ServiceLinks() {
     <section className="py-12 bg-gray-50">
       <div className="container px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-futa-green">KẾT NỐI FUTA GROUP</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-futa-green">KẾT NỐI VIETBUS</h2>
           <p className="text-gray-600 mt-2">
-            Kết nối đa dạng hệ sinh thái FUTA Group qua App FUTA: mua vé Xe Phương Trang, Xe Buýt, Xe Hợp Đồng, Giao
+            Kết nối đa dạng hệ sinh thái Vietbus qua App Vietbus: mua vé Xe Vietbus, Xe Buýt, Xe Hợp Đồng, Giao
             Hàng,...
           </p>
         </div>

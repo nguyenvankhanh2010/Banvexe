@@ -32,7 +32,7 @@ export default function InvoicePage() {
             <div className="mt-8 text-center">
               <p className="text-gray-600">
                 Nếu bạn cần hỗ trợ thêm, vui lòng liên hệ hotline{" "}
-                <span className="text-futa-orange font-bold">19006067</span>
+                <span className="text-futa-orange font-bold">22110XXX</span>
               </p>
             </div>
           </div>

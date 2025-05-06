@@ -7,8 +7,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "FUTA Bus Lines - Chất lượng là danh dự",
-  description: "Đặt vé xe Phương Trang trực tuyến",
+  title: "Vietbus - Nhanh chóng - Tiện lợi",
+  description: "Đặt vé xe Vietbus trực tuyến",
     generator: 'v0.dev'
 }
 

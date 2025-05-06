@@ -54,8 +54,8 @@ const config = {
           foreground: "hsl(var(--card-foreground))",
         },
         futa: {
-          orange: "#FF5722",
-          green: "#00A67E",
+          orange: "#0b6a68",
+          green: "#0b6a68",
         },
       },
       borderRadius: {

@@ -7,19 +7,19 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 const promotions = [
   {
     id: 1,
-    title: "FUTA ĐỒNG HÀNH CÙNG SHB - X3 QUÀ TẶNG",
+    title: "VIETBUS ĐỒNG HÀNH CÙNG SHB - X3 QUÀ TẶNG",
     image: "/images/khuyenmai1.jpg",
     date: "08/12/2023",
   },
   {
     id: 2,
-    title: "CÔNG TY PHƯƠNG TRANG THÔNG BÁO THAY ĐỔI ĐẦU SỐ TỔNG ĐÀI CHI NHÁNH CÀ MAU",
+    title: "CÔNG TY VIETBUS THÔNG BÁO THAY ĐỔI ĐẦU SỐ TỔNG ĐÀI CHI NHÁNH HỒ CHÍ MINH",
     image: "/images/khuyenmai2.png",
     date: "28/03/2025",
   },
   {
     id: 3,
-    title: "CÔNG TY PHƯƠNG TRANG TƯNG BỪNG KHAI TRƯƠNG VĂN PHÒNG BA HÒN - KIÊN GIANG",
+    title: "CÔNG TY VIETSUB TƯNG BỪNG KHAI TRƯƠNG VĂN PHÒNG BA HÒN - KIÊN GIANG",
     image: "/images/khuyenmai3.jpg",
     date: "28/03/2025",
   },

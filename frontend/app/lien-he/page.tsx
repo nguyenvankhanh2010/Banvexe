@@ -17,7 +17,7 @@ export default function ContactPage() {
               <div>
                 <div className="bg-white p-6 rounded-lg shadow-md">
                   <h2 className="text-xl font-bold text-futa-orange mb-4">
-                    CÔNG TY CỔ PHẦN XE KHÁCH PHƯƠNG TRANG - FUTA BUS LINES
+                    CÔNG TY CỔ PHẦN VIETBUS
                   </h2>
 
                   <div className="space-y-4">
@@ -25,7 +25,7 @@ export default function ContactPage() {
                       <MapPin className="h-5 w-5 text-futa-orange flex-shrink-0 mt-1" />
                       <div>
                         <p className="font-medium">Địa chỉ:</p>
-                        <p>Số 01 Tô Hiến Thành, Phường 3, Thành phố Đà Lạt, Tỉnh Lâm Đồng, Việt Nam</p>
+                        <p>Số 01 Võ Văn Ngân, Phường Linh Trung, Thành phố Thủ Đức, Việt Nam.</p>
                       </div>
                     </div>
 
@@ -33,8 +33,8 @@ export default function ContactPage() {
                       <Mail className="h-5 w-5 text-futa-orange flex-shrink-0 mt-1" />
                       <div>
                         <p className="font-medium">Email:</p>
-                        <Link href="mailto:hotro@futa.vn" className="text-futa-orange hover:underline">
-                          hotro@futa.vn
+                        <Link href="mailto:hotro@vietbus.vn" className="text-futa-orange hover:underline">
+                          hotro@vietbus.vn
                         </Link>
                       </div>
                     </div>
@@ -43,7 +43,7 @@ export default function ContactPage() {
                       <Phone className="h-5 w-5 text-futa-orange flex-shrink-0 mt-1" />
                       <div>
                         <p className="font-medium">Điện thoại:</p>
-                        <p>02838386852</p>
+                        <p>0299599789</p>
                       </div>
                     </div>
 
@@ -51,7 +51,7 @@ export default function ContactPage() {
                       <Phone className="h-5 w-5 text-futa-orange flex-shrink-0 mt-1" />
                       <div>
                         <p className="font-medium">Fax:</p>
-                        <p>02838386853</p>
+                        <p>0299599789</p>
                       </div>
                     </div>
 
@@ -59,7 +59,7 @@ export default function ContactPage() {
                       <Phone className="h-5 w-5 text-futa-orange flex-shrink-0 mt-1" />
                       <div>
                         <p className="font-medium">Hotline:</p>
-                        <p className="text-futa-orange font-bold">19006067</p>
+                        <p className="text-futa-orange font-bold">22110XXX</p>
                       </div>
                     </div>
 
@@ -67,8 +67,8 @@ export default function ContactPage() {
                       <MapPin className="h-5 w-5 text-futa-orange flex-shrink-0 mt-1" />
                       <div>
                         <p className="font-medium">Website:</p>
-                        <Link href="https://futabus.vn" className="text-futa-orange hover:underline">
-                          https://futabus.vn
+                        <Link href="https://vietbus.vn" className="text-futa-orange hover:underline">
+                          https://vietbus.vn
                         </Link>
                       </div>
                     </div>
@@ -87,7 +87,7 @@ export default function ContactPage() {
           <div className="container">
             <div className="aspect-video w-full rounded-lg overflow-hidden">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3903.1583920826735!2d108.43946797469275!3d11.957662636690708!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317112d959f88991%3A0x9e7fab5c6edcf34!2zMSBUw7QgSGnhur9uIFRow6BuaCwgUGjGsOG7nW5nIDMsIFRow6BuaCBwaOG7kSDEkMOgIEzhuqF0LCBMw6JtIMSQ4buTbmcgNjYwMDAsIFZp4buHdCBOYW0!5e0!3m2!1svi!2s!4v1711644000000!5m2!1svi!2s"
+                src="https://www.google.com/maps?q=Số+01+Võ+Văn+Ngân,+Phường+Linh+Trung,+Thành+phố+Thủ+Đức,+Việt+Nam&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

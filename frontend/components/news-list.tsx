@@ -6,8 +6,8 @@ import { ChevronRight } from "lucide-react"
 
 const newsCategories = [
   { id: "all", name: "Tin tức tổng hợp", active: true },
-  { id: "futa-bus", name: "FUTA Bus Lines", active: false },
-  { id: "futa-city", name: "FUTA City Bus", active: false },
+  { id: "vietbus", name: "Vietbus", active: false },
+  { id: "vietbus-city", name: "Vietbus City Bus", active: false },
   { id: "promotions", name: "Khuyến mãi", active: false },
   { id: "awards", name: "Giải thưởng", active: false },
   { id: "stations", name: "Trạm Dừng", active: false },
@@ -16,38 +16,38 @@ const newsCategories = [
 const newsItems = [
   {
     id: 1,
-    title: "FUTA ĐỒNG HÀNH CÙNG SHB - X3 QUÀ TẶNG",
+    title: "Vietbus đồng hành cùng SHB - X3 quà tặng",
     image: "/images/khuyenmai1.jpg",
     date: "14:35 26/07/2023",
     category: "promotions",
   },
   {
     id: 2,
-    title: "CÔNG TY PHƯƠNG TRANG THÔNG BÁO THAY ĐỔI ĐẦU SỐ TỔNG ĐÀI CHI NHÁNH CÀ MAU",
+    title: "CÔNG TY VIETBUS THÔNG BÁO THAY ĐỔI ĐẦU SỐ TỔNG ĐÀI CHI NHÁNH HỒ CHÍ MINH",
     image: "/images/tintuc1.png",
     date: "15:56 28/03/2025",
-    category: "futa-bus",
+    category: "vietbus",
   },
   {
     id: 3,
-    title: "CÔNG TY PHƯƠNG TRANG TƯNG BỪNG KHAI TRƯƠNG VĂN PHÒNG BA HÒN - KIÊN GIANG",
+    title: "CÔNG TY VIETBUS TƯNG BỪNG KHAI TRƯƠNG VĂN PHÒNG BA HÒN - KIÊN GIANG",
     image: "/images/tintuc2.jpg",
     date: "11:04 28/03/2025",
-    category: "futa-bus",
+    category: "vietbus",
   },
   {
     id: 4,
     title: "MỞ RỘNG HÀNH TRÌNH, KHÁM PHÁ TUYẾN MỚI BẾN XE MIỀN ĐÔNG MỚI - ĐÀ LẠT",
     image: "/images/tintuc3.png",
     date: "15:31 27/03/2025",
-    category: "futa-bus",
+    category: "vietbus",
   },
   {
     id: 5,
-    title: "CÔNG TY PHƯƠNG TRANG TƯNG BỪNG KHAI TRƯƠNG TUYẾN XE BẾN XE HÀ TIÊN - BẾN XE CẦN THƠ",
+    title: "CÔNG TY VIETBUS TƯNG BỪNG KHAI TRƯƠNG TUYẾN XE BẾN XE HÀ TIÊN - BẾN XE CẦN THƠ",
     image: "/images/tintuc4.png",
     date: "15:23 27/03/2025",
-    category: "futa-bus",
+    category: "vietbus",
   },
 ]
 

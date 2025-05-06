@@ -14,7 +14,7 @@ export default function Home() {
       <main className="flex-1">
         <div className="relative w-full h-[300px] md:h-[400px] overflow-hidden">
           <Image
-            src="/images/trangchu.png"
+            src="/images/trangchu.jpg"
             alt="FUTA Bus Lines - 24 năm vững tin & phát triển"
             fill
             className="object-cover"

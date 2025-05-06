@@ -10,26 +10,27 @@ export function Footer() {
           <div>
             <div className="flex flex-col gap-2">
               <h3 className="text-futa-green font-bold">TRUNG TÂM TỔNG ĐÀI & CSKH</h3>
-              <p className="text-futa-orange text-2xl font-bold">1900 6067</p>
+              <p className="text-futa-orange text-2xl font-bold">2211 0XXX</p>
             </div>
 
             <div className="mt-4">
-              <h4 className="font-bold text-sm">CÔNG TY CỔ PHẦN XE KHÁCH PHƯƠNG TRANG - FUTA BUS LINES</h4>
+              <h4 className="font-bold text-sm">CÔNG TY CỔ PHẦN XE KHÁCH VIETBUS</h4>
+              <h4 className="font-bold text-sm">CÔNG TY CỔ PHẦN VIETBUS</h4>
               <p className="text-sm mt-2">
-                Địa chỉ: Số 01 Tô Hiến Thành, Phường 3, Thành phố Đà Lạt, Tỉnh Lâm Đồng, Việt Nam.
+                Địa chỉ: Số 01 Võ Văn Ngân, Phường Linh Trung, Thành phố Thủ Đức, Việt Nam.
               </p>
               <p className="text-sm mt-2">
                 Email:{" "}
-                <Link href="mailto:hotro@futa.vn" className="text-futa-orange">
-                  hotro@futa.vn
+                <Link href="mailto:hotro@vietbus.vn" className="text-futa-orange">
+                  hotro@vietbus.vn
                 </Link>
               </p>
-              <p className="text-sm mt-2">Điện thoại: 02838386852</p>
-              <p className="text-sm mt-2">Fax: 02838386853</p>
+              <p className="text-sm mt-2">Điện thoại: 0299599789</p>
+              <p className="text-sm mt-2">Fax: 02999599789</p>
             </div>
 
             <div className="mt-4">
-              <h4 className="font-bold text-sm">TẢI APP FUTA</h4>
+              <h4 className="font-bold text-sm">TẢI APP VIETBUS</h4>
               <div className="flex gap-2 mt-2">
                 <Link href="#" className="bg-green-600 text-white px-3 py-1 rounded text-xs">
                   CH Play
@@ -59,7 +60,7 @@ export function Footer() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <h4 className="font-bold text-sm">FUTA Bus Lines</h4>
+                <h4 className="font-bold text-sm">Vietbus</h4>
                 <ul className="mt-2 space-y-2">
                   <li className="text-xs flex items-center gap-1">
                     <span className="w-1 h-1 bg-gray-500 rounded-full"></span>
@@ -127,8 +128,8 @@ export function Footer() {
           <div className="grid grid-cols-2 gap-4">
             <Link href="#">
               <Image
-                src="/images/logo-futa.png"
-                alt="FUTA Bus Lines"
+                src="/images/logo.jpg"
+                alt="Vietbus"
                 width={150}
                 height={60}
                 className="object-contain"
@@ -136,8 +137,8 @@ export function Footer() {
             </Link>
             <Link href="#">
               <Image
-                src="/images/logo-futa.png"
-                alt="FUTA Express"
+                src="/images/logo.jpg"
+                alt="Vietbus Express"
                 width={150}
                 height={60}
                 className="object-contain"
@@ -145,8 +146,8 @@ export function Footer() {
             </Link>
             <Link href="#">
               <Image
-                src="/images/logo-futa.png"
-                alt="FUTA Advertising"
+                src="/images/logo.jpg"
+                alt="Vietbus Advertising"
                 width={150}
                 height={60}
                 className="object-contain"
@@ -154,7 +155,7 @@ export function Footer() {
             </Link>
             <Link href="#">
               <Image
-                src="/images/logo-futa.png"
+                src="/images/logo.jpg"
                 alt="Phúc Lộc Rest Stop"
                 width={150}
                 height={60}
@@ -166,8 +167,7 @@ export function Footer() {
       </div>
 
       <div className="bg-futa-green text-white py-3 text-center text-xs">
-        © 2023 | Bản quyền thuộc về Công ty Cổ Phần Xe khách Phương Trang - FUTA Bus Lines 2023 | Chịu trách nhiệm quản
-        lý nội dung: Ông Võ Duy Thành
+        © 2025 | Bản quyền thuộc về Công ty Cổ Phần Vietbus 2025
       </div>
     </footer>
   )
