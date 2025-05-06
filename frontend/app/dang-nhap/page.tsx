@@ -53,7 +53,7 @@ const LoginPage = () => {
         setTimeout(() => {
           switch(result.userType) {
             case "OWNER":
-              window.location.href = "http://localhost:3001";
+              window.location.href = "https://banvexe-owner.vercel.app/";
               break;
             case "STAFF":
               window.location.href = "http://localhost:3002";
