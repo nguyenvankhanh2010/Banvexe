@@ -102,9 +102,9 @@ export const login = async (
   try {
     console.log("Đang đăng nhập với:", userName);
 
-    const apiUrl = process.env.API_URL;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     if (!apiUrl) {
-      throw new Error("API_URL environment variable is not set");
+      throw new Error("NEXT_PUBLIC_API_URL environment variable is not set");
     }
     const response = await fetch(`${apiUrl}/dang-nhap`, {
       method: "POST",
@@ -150,9 +150,9 @@ export const login = async (
  */
 export const logout = async (): Promise<{ success: boolean; message: string }> => {
   try {
-    const apiUrl = process.env.API_URL;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     if (!apiUrl) {
-      throw new Error("API_URL environment variable is not set");
+      throw new Error("NEXT_PUBLIC_API_URL environment variable is not set");
     }
     const response = await fetch(`${apiUrl}/dang-xuat`, {
       method: "POST",
