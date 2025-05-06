@@ -29,14 +29,10 @@ export const getUserType = (): string | null => {
  */
 export const getUserId = (): string | null => {
   if (typeof window === 'undefined') return null;
-  // Kiểm tra từ cả sessionStorage và cookie
   const fromSession = sessionStorage.getItem("userId");
-  
-  // Nếu không có trong session, thử lấy từ cookie
   if (!fromSession) {
     return getCookie("userId");
   }
-  
   return fromSession;
 };
 
@@ -68,19 +64,16 @@ const setCookie = (name: string, value: string, days: number = 1): void => {
 export const saveLoginInfo = (userName: string, userType: string, userId: string): void => {
   if (typeof window === 'undefined') return;
 
-  // Lưu vào sessionStorage
   sessionStorage.setItem("userName", userName);
   sessionStorage.setItem("userType", userType);
   sessionStorage.setItem("userId", userId);
   sessionStorage.setItem("isLoggedIn", "true");
-  
-  // Lưu thêm vào cookie (phòng trường hợp backend chưa lưu được cookie)
+
   setCookie("userId", userId);
   setCookie("userName", userName);
-  
+
   console.log("Đã lưu userId vào cookie và session:", userId);
-  
-  // Kích hoạt event để thông báo cho các component khác
+
   window.dispatchEvent(new Event('storage'));
 };
 
@@ -92,12 +85,10 @@ export const clearLoginInfo = (): void => {
   sessionStorage.removeItem("userType");
   sessionStorage.removeItem("userId");
   sessionStorage.removeItem("isLoggedIn");
-  
-  // Xóa cookies
+
   setCookie("userId", "", -1);
   setCookie("userName", "", -1);
-  
-  // Kích hoạt event để thông báo cho các component khác
+
   window.dispatchEvent(new Event('storage'));
 };
 
@@ -105,19 +96,20 @@ export const clearLoginInfo = (): void => {
  * Thực hiện đăng nhập
  */
 export const login = async (
-  userName: string, 
+  userName: string,
   password: string
-): Promise<{success: boolean, message: string, userType?: string, userId?: string}> => {
+): Promise<{ success: boolean; message: string; userType?: string; userId?: string }> => {
   try {
     console.log("Đang đăng nhập với:", userName);
-    
-    const response = await fetch("http://localhost:8080/dang-nhap", {
+
+    const apiUrl = process.env.API_URL || "http://localhost:8080"; // Mặc định dùng localhost nếu không có biến môi trường
+    const response = await fetch(`${apiUrl}/dang-nhap`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         "Accept": "application/json",
       },
-      credentials: "include", // Quan trọng để nhận cookies từ server
+      credentials: "include",
       body: new URLSearchParams({
         name: userName,
         password: password,
@@ -125,27 +117,27 @@ export const login = async (
     });
 
     const data = await response.json();
-    
+
     if (response.ok) {
       console.log("Đăng nhập thành công, userId:", data.userId);
-      saveLoginInfo(data.userName, data.userType, data.userId || "3"); // Mặc định là 3 nếu không có userId
+      saveLoginInfo(data.userName, data.userType, data.userId || "3");
       return {
         success: true,
         message: "Đăng nhập thành công",
         userType: data.userType,
-        userId: data.userId
+        userId: data.userId,
       };
     } else {
       return {
         success: false,
-        message: data.error || "Đăng nhập thất bại"
+        message: data.error || "Đăng nhập thất bại",
       };
     }
   } catch (error) {
     console.error("Login error:", error);
     return {
       success: false,
-      message: "Không thể kết nối đến server"
+      message: "Không thể kết nối đến server",
     };
   }
 };
@@ -153,35 +145,35 @@ export const login = async (
 /**
  * Thực hiện đăng xuất
  */
-export const logout = async (): Promise<{success: boolean, message: string}> => {
+export const logout = async (): Promise<{ success: boolean; message: string }> => {
   try {
-    const response = await fetch("http://localhost:8080/dang-xuat", {
+    const apiUrl = process.env.API_URL || "http://localhost:8080"; // Mặc định dùng localhost nếu không có biến môi trường
+    const response = await fetch(`${apiUrl}/dang-xuat`, {
       method: "POST",
       credentials: "include",
     });
-    
+
     clearLoginInfo();
-    
+
     if (response.ok) {
       return {
         success: true,
-        message: "Đăng xuất thành công"
+        message: "Đăng xuất thành công",
       };
     } else {
       return {
         success: false,
-        message: "Đăng xuất thất bại"
+        message: "Đăng xuất thất bại",
       };
     }
   } catch (error) {
     console.error("Logout error:", error);
-    
-    // Vẫn xóa dữ liệu ngay cả khi gọi API thất bại
+
     clearLoginInfo();
-    
+
     return {
       success: false,
-      message: "Không thể kết nối đến server"
+      message: "Không thể kết nối đến server",
     };
   }
-}; 
+};
