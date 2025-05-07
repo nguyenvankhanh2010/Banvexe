@@ -55,14 +55,14 @@ export function AppSidebar() {
       const result = await logout()
       if (result.success) {
         console.log("Đăng xuất thành công:", result.message)
-        router.push("/dang-nhap")
       } else {
         console.error("Đăng xuất thất bại:", result.message)
-        router.push("/dang-nhap") // Vẫn chuyển hướng dù đăng xuất thất bại
       }
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error)
-      router.push("/dang-nhap") // Chuyển hướng ngay cả khi có lỗi
+    } finally {
+      // Luôn chuyển hướng về trang đăng nhập của customer sau khi đăng xuất
+      router.push("/dang-nhap")
     }
   }
 
