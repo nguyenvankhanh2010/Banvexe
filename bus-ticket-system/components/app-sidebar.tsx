@@ -2,7 +2,8 @@
 
 import { BarChart3, Bell, Bus, Home, LogOut, Users } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { logout } from "@/lib/auth"
 
 import {
   Sidebar,
@@ -19,6 +20,7 @@ import { Button } from "@/components/ui/button"
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
 
   const menuItems = [
     {
@@ -47,6 +49,22 @@ export function AppSidebar() {
       href: "/reports",
     },
   ]
+
+  const handleLogout = async () => {
+    try {
+      const result = await logout()
+      if (result.success) {
+        console.log("Đăng xuất thành công:", result.message)
+        router.push("/dang-nhap")
+      } else {
+        console.error("Đăng xuất thất bại:", result.message)
+        router.push("/dang-nhap") // Vẫn chuyển hướng dù đăng xuất thất bại
+      }
+    } catch (error) {
+      console.error("Lỗi khi đăng xuất:", error)
+      router.push("/dang-nhap") // Chuyển hướng ngay cả khi có lỗi
+    }
+  }
 
   return (
     <Sidebar>
@@ -84,7 +102,7 @@ export function AppSidebar() {
               <p className="text-xs text-muted-foreground">admin@example.com</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
             <span className="sr-only">Đăng xuất</span>
           </Button>
