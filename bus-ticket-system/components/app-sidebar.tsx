@@ -61,8 +61,8 @@ export function AppSidebar() {
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error)
     } finally {
-      // Luôn chuyển hướng về trang đăng nhập của customer sau khi đăng xuất
-      router.push("/dang-nhap")
+      // Chuyển hướng tuyệt đối về trang đăng nhập của customer
+      window.location.href = "https://banvexe.vercel.app/dang-nhap"
     }
   }
 
