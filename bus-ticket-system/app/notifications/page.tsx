@@ -48,7 +48,12 @@ export default function NotificationsPage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('http://localhost:8080/notifications', {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!apiUrl) {
+          throw new Error("NEXT_PUBLIC_API_URL environment variable is not set");
+        }
+
+        const response = await fetch(`${apiUrl}/notifications`, {
           method: 'GET',
           credentials: 'include', // Gửi cookie để backend nhận session
         });
@@ -86,7 +91,12 @@ export default function NotificationsPage() {
 
   const handleDelete = async (notificationId: string) => {
     try {
-      const response = await fetch(`http://localhost:8080/notifications/${notificationId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) {
+        throw new Error("NEXT_PUBLIC_API_URL environment variable is not set");
+      }
+
+      const response = await fetch(`${apiUrl}/notifications/${notificationId}`, {
         method: 'DELETE',
         credentials: 'include', // Gửi cookie để backend nhận session
       });
@@ -107,19 +117,74 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleCreateNotification = (newNotification: Notification) => {
-    setNotifications([...notifications, newNotification]); // Thêm thông báo mới vào danh sách
-    setIsAddDialogOpen(false);
+  const handleCreateNotification = async (newNotification: Omit<Notification, 'id' | 'createdAt'>) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) {
+        throw new Error("NEXT_PUBLIC_API_URL environment variable is not set");
+      }
+
+      const response = await fetch(`${apiUrl}/notifications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(newNotification),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Lỗi khi tạo thông báo: ${response.statusText}`);
+      }
+
+      const createdNotification: Notification = await response.json();
+      setNotifications([...notifications, createdNotification]);
+      setIsAddDialogOpen(false);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Đã xảy ra lỗi không xác định');
+      }
+    }
   };
 
-  const handleUpdateNotification = (updatedNotification: Notification) => {
-    // Cập nhật thông báo trong danh sách
-    setNotifications(
-      notifications.map((notification) =>
-        notification.id === updatedNotification.id ? updatedNotification : notification
-      )
-    );
-    setIsEditDialogOpen(false);
+  const handleUpdateNotification = async (updatedNotification: Notification) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) {
+        throw new Error("NEXT_PUBLIC_API_URL environment variable is not set");
+      }
+
+      const response = await fetch(`${apiUrl}/notifications/${updatedNotification.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(updatedNotification),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Lỗi khi cập nhật thông báo: ${response.statusText}`);
+      }
+
+      const updated: Notification = await response.json();
+      setNotifications(
+        notifications.map((notification) =>
+          notification.id === updated.id ? updated : notification
+        )
+      );
+      setIsEditDialogOpen(false);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Đã xảy ra lỗi không xác định');
+      }
+    }
   };
 
   const filteredNotifications = notifications.filter((notification) => {
@@ -283,4 +348,4 @@ export default function NotificationsPage() {
       </Dialog>
     </div>
   );
-} 
+}
