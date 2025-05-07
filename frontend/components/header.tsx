@@ -114,6 +114,11 @@ export function Header() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!apiUrl) {
+          throw new Error("NEXT_PUBLIC_API_URL environment variable is not set");
+        }
+
         const response = await axios.get<
           {
             id: string;
@@ -123,7 +128,7 @@ export function Header() {
             createdAt: string;
             read: boolean;
           }[]
-        >("http://localhost:8080/notifications", {
+        >(`${apiUrl}/notifications`, {
           withCredentials: true,
         });
 
