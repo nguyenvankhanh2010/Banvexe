@@ -52,6 +52,7 @@ export function Header() {
       read: boolean
     }[]
   >([])
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false)
 
   // Kiểm tra trạng thái đăng nhập từ session
   const checkLoginStatus = useCallback(() => {
@@ -110,67 +111,57 @@ export function Header() {
     return () => clearInterval(interval)
   }, [checkLoginStatus])
 
-  // Fetch notifications from backend
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        if (!apiUrl) {
-          throw new Error("NEXT_PUBLIC_API_URL environment variable is not set");
-        }
-
-        const response = await axios.get<
-          {
-            id: string;
-            title: string;
-            content: string;
-            target: string;
-            createdAt: string;
-            read: boolean;
-          }[]
-        >(`${apiUrl}/notifications`, {
-          withCredentials: true,
-        });
-
-        // Kiểm tra dữ liệu trả về
-        if (!Array.isArray(response.data)) {
-          throw new Error("Dữ liệu trả về từ API không phải là mảng");
-        }
-
-        // Lọc chỉ lấy thông báo có target là "customer"
-        const customerNotifications = response.data.filter(
-          (item) => item.target.toLowerCase() === "customer"
-        );
-
-        // Ánh xạ dữ liệu từ API sang định dạng notifications của Header
-        const fetchedNotifications = customerNotifications.map((item) => {
-          // Ánh xạ target sang type (chỉ cần type "payment" vì đã lọc customer)
-          const type = "payment" as const;
-
-          return {
-            id: item.id,
-            title: item.title,
-            content: item.content,
-            time: new Date(item.createdAt).toLocaleString("vi-VN", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            }),
-            type,
-            read: item.read || false,
-          };
-        });
-
-        setNotifications(fetchedNotifications);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
+  // Fetch notifications only when Popover is opened
+  const fetchNotifications = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
+      if (!apiUrl) {
+        throw new Error("NEXT_PUBLIC_API_URL environment variable is not set")
       }
-    };
 
-    if (userLoggedIn) {
-      fetchNotifications();
+      const response = await axios.get<
+        {
+          id: string
+          title: string
+          content: string
+          target: string
+          createdAt: string
+          read: boolean
+        }[]
+      >(`${apiUrl}/notifications`, {
+        withCredentials: true,
+      })
+
+      if (!Array.isArray(response.data)) {
+        throw new Error("Dữ liệu trả về từ API không phải là mảng")
+      }
+
+      const customerNotifications = response.data.filter(
+        (item) => item.target.toLowerCase() === "customer"
+      )
+
+      const fetchedNotifications = customerNotifications.map((item) => {
+        const type = "payment" as const
+
+        return {
+          id: item.id,
+          title: item.title,
+          content: item.content,
+          time: new Date(item.createdAt).toLocaleString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          }),
+          type,
+          read: item.read || false,
+        }
+      })
+
+      setNotifications(fetchedNotifications)
+    } catch (error) {
+      console.error("Error fetching notifications:", error)
     }
-  }, [userLoggedIn])
+  }
 
   const handleLogout = async () => {
     try {
@@ -305,9 +296,18 @@ export function Header() {
 
           <div className="flex items-center gap-4">
             {userLoggedIn ? (
-              <Popover>
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative text-white">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative text-white"
+                    onClick={() => {
+                      if (!isPopoverOpen) {
+                        fetchNotifications()
+                      }
+                    }}
+                  >
                     <Bell className="h-5 w-5" />
                   </Button>
                 </PopoverTrigger>
