@@ -111,61 +111,61 @@ export function Header() {
   }, [checkLoginStatus])
 
   // Fetch notifications from backend
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await axios.get<
-          {
-            id: string;
-            title: string;
-            content: string;
-            target: string;
-            createdAt: string;
-            read: boolean;
-          }[]
-        >("http://localhost:8080/notifications", {
-          withCredentials: true,
-        });
+useEffect(() => {
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get<
+        {
+          id: string;
+          title: string;
+          content: string;
+          target: string;
+          createdAt: string;
+          read: boolean;
+        }[]
+      >("http://localhost:8080/notifications", {
+        withCredentials: true,
+      });
 
-        // Kiểm tra dữ liệu trả về
-        if (!Array.isArray(response.data)) {
-          throw new Error("Dữ liệu trả về từ API không phải là mảng");
-        }
-
-        // Lọc chỉ lấy thông báo có target là "customer"
-        const customerNotifications = response.data.filter(
-          (item) => item.target.toLowerCase() === "customer"
-        );
-
-        // Ánh xạ dữ liệu từ API sang định dạng notifications của Header
-        const fetchedNotifications = customerNotifications.map((item) => {
-          // Ánh xạ target sang type (chỉ cần type "payment" vì đã lọc customer)
-          const type = "payment" as const;
-
-          return {
-            id: item.id,
-            title: item.title,
-            content: item.content,
-            time: new Date(item.createdAt).toLocaleString("vi-VN", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            }),
-            type,
-            read: item.read || false,
-          };
-        });
-
-        setNotifications(fetchedNotifications);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
+      // Kiểm tra dữ liệu trả về
+      if (!Array.isArray(response.data)) {
+        throw new Error("Dữ liệu trả về từ API không phải là mảng");
       }
-    };
 
-    if (userLoggedIn) {
-      fetchNotifications();
+      // Lọc lấy thông báo có target là "customer" hoặc "all"
+      const filteredNotifications = response.data.filter(
+        (item) => item.target.toLowerCase() === "customer" || item.target.toLowerCase() === "all"
+      );
+
+      // Ánh xạ dữ liệu từ API sang định dạng notifications của Header
+      const fetchedNotifications = filteredNotifications.map((item) => {
+        // Ánh xạ target sang type (giữ nguyên logic ánh xạ type)
+        const type = "payment" as const;
+
+        return {
+          id: item.id,
+          title: item.title,
+          content: item.content,
+          time: new Date(item.createdAt).toLocaleString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          }),
+          type,
+          read: item.read || false,
+        };
+      });
+
+      setNotifications(fetchedNotifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
     }
-  }, [userLoggedIn])
+  };
+
+  if (userLoggedIn) {
+    fetchNotifications();
+  }
+}, [userLoggedIn]);
 
   const handleLogout = async () => {
     try {

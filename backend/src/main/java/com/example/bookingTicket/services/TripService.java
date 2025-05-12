@@ -94,8 +94,6 @@ public class TripService {
 
 
 
-
-
     ///////////////////////////////////
     @Transactional
     public Trip createTrip(Trip trip, Long busId) {

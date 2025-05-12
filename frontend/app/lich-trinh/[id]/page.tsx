@@ -31,36 +31,52 @@ export default function RouteDetailsPage({ params }: PageProps) {
   const [seats, setSeats] = useState<Seat[]>([])
 
   useEffect(() => {
+
     const loadTripDetails = async () => {
-      if (!resolvedParams?.id) return;
-      
+      if (!resolvedParams?.id) {
+        setError("ID chuyến đi không hợp lệ");
+        setLoading(false);
+        return;
+      }
+
       try {
-        setLoading(true)
-        // Tải thông tin chuyến đi
-        const tripResponse = await fetch(`/api/trips/${resolvedParams.id}`);
+        setLoading(true);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+        if (!process.env.NEXT_PUBLIC_API_URL) {
+          console.warn("NEXT_PUBLIC_API_URL không được định nghĩa, dùng fallback: http://localhost:8080");
+        }
+        console.log("Đang lấy chuyến đi từ:", `${apiUrl}/api/trips/${resolvedParams.id}`);
+        const tripResponse = await fetch(`${apiUrl}/api/trips/${resolvedParams.id}`, {
+          headers: { "Content-Type": "application/json" },
+        });
         if (!tripResponse.ok) {
-          throw new Error('Failed to fetch trip details');
+          const errorData = await tripResponse.json().catch(() => ({}));
+          throw new Error(errorData.message || `Không thể lấy chi tiết chuyến đi (status: ${tripResponse.status})`);
         }
         const tripData = await tripResponse.json();
         setTripDetails(tripData);
 
-        // Tải thông tin ghế - sử dụng ID số từ response
-        const seatsResponse = await fetch(`/api/trips/${tripData.id}/seats`);
+        console.log("Đang lấy ghế từ:", `${apiUrl}/api/trips/${tripData.id}/seats`);
+        const seatsResponse = await fetch(`${apiUrl}/api/trips/${tripData.id}/seats`, {
+          headers: { "Content-Type": "application/json" },
+        });
         if (!seatsResponse.ok) {
-          console.error('Failed to fetch seats:', await seatsResponse.text());
-          throw new Error('Failed to fetch seats');
+          const errorData = await seatsResponse.json().catch(() => ({}));
+          console.error("Lỗi khi lấy ghế:", errorData);
+          throw new Error(errorData.message || "Không thể lấy thông tin ghế");
         }
         const seatsData = await seatsResponse.json();
         setSeats(seatsData);
 
-        setError(null)
+        setError(null);
       } catch (err) {
-        console.error("Error loading trip details:", err)
-        setError("Không thể tải thông tin chuyến xe")
+        console.error("Lỗi khi tải chi tiết chuyến đi:", err);
+        setError(err instanceof Error ? err.message : "Không thể tải thông tin chuyến xe");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
+
 
     loadTripDetails()
   }, [resolvedParams?.id])
